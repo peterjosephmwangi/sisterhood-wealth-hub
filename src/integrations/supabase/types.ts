@@ -9,16 +9,230 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      contributions: {
+        Row: {
+          amount: number
+          contribution_date: string
+          created_at: string
+          id: string
+          member_id: string
+          notes: string | null
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          status: Database["public"]["Enums"]["contribution_status"]
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          contribution_date?: string
+          created_at?: string
+          id?: string
+          member_id: string
+          notes?: string | null
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          status?: Database["public"]["Enums"]["contribution_status"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          contribution_date?: string
+          created_at?: string
+          id?: string
+          member_id?: string
+          notes?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          status?: Database["public"]["Enums"]["contribution_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contributions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loans: {
+        Row: {
+          amount: number
+          approved_by: string | null
+          created_at: string
+          due_date: string
+          id: string
+          interest_rate: number
+          loan_date: string
+          member_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          approved_by?: string | null
+          created_at?: string
+          due_date: string
+          id?: string
+          interest_rate?: number
+          loan_date?: string
+          member_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          approved_by?: string | null
+          created_at?: string
+          due_date?: string
+          id?: string
+          interest_rate?: number
+          loan_date?: string
+          member_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loans_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_attendance: {
+        Row: {
+          attended: boolean
+          id: string
+          meeting_id: string
+          member_id: string
+        }
+        Insert: {
+          attended?: boolean
+          id?: string
+          meeting_id: string
+          member_id: string
+        }
+        Update: {
+          attended?: boolean
+          id?: string
+          meeting_id?: string
+          member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_attendance_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_attendance_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meetings: {
+        Row: {
+          actual_attendees: number | null
+          agenda: string[] | null
+          created_at: string
+          expected_attendees: number | null
+          id: string
+          location: string
+          meeting_date: string
+          meeting_time: string
+          minutes: string | null
+          status: Database["public"]["Enums"]["meeting_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          actual_attendees?: number | null
+          agenda?: string[] | null
+          created_at?: string
+          expected_attendees?: number | null
+          id?: string
+          location: string
+          meeting_date: string
+          meeting_time: string
+          minutes?: string | null
+          status?: Database["public"]["Enums"]["meeting_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          actual_attendees?: number | null
+          agenda?: string[] | null
+          created_at?: string
+          expected_attendees?: number | null
+          id?: string
+          location?: string
+          meeting_date?: string
+          meeting_time?: string
+          minutes?: string | null
+          status?: Database["public"]["Enums"]["meeting_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      members: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          join_date: string
+          name: string
+          phone: string
+          status: Database["public"]["Enums"]["member_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          join_date?: string
+          name: string
+          phone: string
+          status?: Database["public"]["Enums"]["member_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          join_date?: string
+          name?: string
+          phone?: string
+          status?: Database["public"]["Enums"]["member_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_member_total_contributions: {
+        Args: { member_uuid: string }
+        Returns: number
+      }
+      get_monthly_contributions_total: {
+        Args: { target_month: string }
+        Returns: number
+      }
     }
     Enums: {
-      [_ in never]: never
+      contribution_status: "confirmed" | "pending" | "failed"
+      meeting_status: "scheduled" | "completed" | "cancelled"
+      member_status: "active" | "inactive" | "suspended"
+      payment_method: "m_pesa" | "bank_transfer" | "cash"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +347,11 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      contribution_status: ["confirmed", "pending", "failed"],
+      meeting_status: ["scheduled", "completed", "cancelled"],
+      member_status: ["active", "inactive", "suspended"],
+      payment_method: ["m_pesa", "bank_transfer", "cash"],
+    },
   },
 } as const
