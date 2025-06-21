@@ -7,16 +7,30 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import AddMemberDialog from '@/components/members/AddMemberDialog';
 import { useMembers } from '@/hooks/useMembers';
+import { useMemberContributions } from '@/hooks/useMemberContributions';
 
 const Members = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const { members, loading, refetch } = useMembers();
+  const { members, loading: membersLoading, refetch: refetchMembers } = useMembers();
+  const { memberContributions, loading: contributionsLoading, refetch: refetchContributions } = useMemberContributions();
 
-  // Calculate total contributions for each member (placeholder for now)
+  const handleMemberAdded = () => {
+    refetchMembers();
+    refetchContributions();
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-KE', {
+      style: 'currency',
+      currency: 'KES',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
   const getMemberContributions = (memberId: string) => {
-    // This will be replaced with actual contribution calculation
-    const amounts = ['KSh 25,000', 'KSh 30,000', 'KSh 15,000', 'KSh 20,000'];
-    return amounts[Math.floor(Math.random() * amounts.length)];
+    const total = memberContributions[memberId] || 0;
+    return formatCurrency(total);
   };
 
   const filteredMembers = members.filter(member =>
@@ -25,12 +39,12 @@ const Members = () => {
     (member.email && member.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  if (loading) {
+  if (membersLoading || contributionsLoading) {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold text-gray-900">Members Management</h2>
-          <AddMemberDialog onMemberAdded={refetch} />
+          <AddMemberDialog onMemberAdded={handleMemberAdded} />
         </div>
         <div className="flex items-center justify-center h-64">
           <p className="text-gray-500">Loading members...</p>
@@ -43,7 +57,7 @@ const Members = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Members Management</h2>
-        <AddMemberDialog onMemberAdded={refetch} />
+        <AddMemberDialog onMemberAdded={handleMemberAdded} />
       </div>
 
       <Card>
