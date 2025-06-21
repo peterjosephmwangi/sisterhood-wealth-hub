@@ -1,67 +1,49 @@
 
 import React, { useState } from 'react';
-import { Plus, Search, Phone, Mail, MoreVertical } from 'lucide-react';
+import { Search, Phone, Mail, MoreVertical } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import AddMemberDialog from '@/components/members/AddMemberDialog';
+import { useMembers } from '@/hooks/useMembers';
 
 const Members = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const { members, loading, refetch } = useMembers();
 
-  const members = [
-    {
-      id: 1,
-      name: 'Grace Wanjiku',
-      phone: '+254 712 345 678',
-      email: 'grace@email.com',
-      contributions: 'KSh 25,000',
-      status: 'Active',
-      joinDate: '2024-01-15',
-    },
-    {
-      id: 2,
-      name: 'Mary Kamau',
-      phone: '+254 723 456 789',
-      email: 'mary@email.com',
-      contributions: 'KSh 30,000',
-      status: 'Active',
-      joinDate: '2024-02-01',
-    },
-    {
-      id: 3,
-      name: 'Sarah Muthoni',
-      phone: '+254 734 567 890',
-      email: 'sarah@email.com',
-      contributions: 'KSh 15,000',
-      status: 'Active',
-      joinDate: '2024-03-10',
-    },
-    {
-      id: 4,
-      name: 'Joyce Njeri',
-      phone: '+254 745 678 901',
-      email: 'joyce@email.com',
-      contributions: 'KSh 20,000',
-      status: 'Active',
-      joinDate: '2024-01-20',
-    },
-  ];
+  // Calculate total contributions for each member (placeholder for now)
+  const getMemberContributions = (memberId: string) => {
+    // This will be replaced with actual contribution calculation
+    const amounts = ['KSh 25,000', 'KSh 30,000', 'KSh 15,000', 'KSh 20,000'];
+    return amounts[Math.floor(Math.random() * amounts.length)];
+  };
 
   const filteredMembers = members.filter(member =>
     member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     member.phone.includes(searchTerm) ||
-    member.email.toLowerCase().includes(searchTerm.toLowerCase())
+    (member.email && member.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold text-gray-900">Members Management</h2>
+          <AddMemberDialog onMemberAdded={refetch} />
+        </div>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-gray-500">Loading members...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Members Management</h2>
-        <Button className="bg-purple-600 hover:bg-purple-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Member
-        </Button>
+        <AddMemberDialog onMemberAdded={refetch} />
       </div>
 
       <Card>
@@ -80,48 +62,64 @@ const Members = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {filteredMembers.map((member) => (
-              <div key={member.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="flex items-center space-x-4">
-                  <Avatar className="w-12 h-12">
-                    <AvatarFallback className="bg-purple-100 text-purple-600 font-semibold">
-                      {member.name.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{member.name}</h3>
-                    <div className="flex items-center space-x-4 text-sm text-gray-600">
-                      <div className="flex items-center">
-                        <Phone className="w-3 h-3 mr-1" />
-                        {member.phone}
-                      </div>
-                      <div className="flex items-center">
-                        <Mail className="w-3 h-3 mr-1" />
-                        {member.email}
+          {filteredMembers.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500">
+                {members.length === 0 ? 'No members found. Add your first member!' : 'No members match your search.'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredMembers.map((member) => (
+                <div key={member.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center space-x-4">
+                    <Avatar className="w-12 h-12">
+                      <AvatarFallback className="bg-purple-100 text-purple-600 font-semibold">
+                        {member.name.split(' ').map(n => n[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{member.name}</h3>
+                      <div className="flex items-center space-x-4 text-sm text-gray-600">
+                        <div className="flex items-center">
+                          <Phone className="w-3 h-3 mr-1" />
+                          {member.phone}
+                        </div>
+                        {member.email && (
+                          <div className="flex items-center">
+                            <Mail className="w-3 h-3 mr-1" />
+                            {member.email}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
-                </div>
-                
-                <div className="flex items-center space-x-6">
-                  <div className="text-right">
-                    <p className="font-semibold text-green-600">{member.contributions}</p>
-                    <p className="text-xs text-gray-500">Total Contributions</p>
+                  
+                  <div className="flex items-center space-x-6">
+                    <div className="text-right">
+                      <p className="font-semibold text-green-600">{getMemberContributions(member.id)}</p>
+                      <p className="text-xs text-gray-500">Total Contributions</p>
+                    </div>
+                    <div className="text-right">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        member.status === 'active' 
+                          ? 'bg-green-100 text-green-800'
+                          : member.status === 'inactive'
+                          ? 'bg-gray-100 text-gray-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
+                      </span>
+                      <p className="text-xs text-gray-500 mt-1">Since {new Date(member.join_date).toLocaleDateString()}</p>
+                    </div>
+                    <Button variant="ghost" size="sm">
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
                   </div>
-                  <div className="text-right">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      {member.status}
-                    </span>
-                    <p className="text-xs text-gray-500 mt-1">Since {member.joinDate}</p>
-                  </div>
-                  <Button variant="ghost" size="sm">
-                    <MoreVertical className="w-4 h-4" />
-                  </Button>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
