@@ -8,7 +8,9 @@ import { Tables } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 
 type ContributionWithMember = Tables<'contributions'> & {
-  members: Tables<'members'> | null;
+  members: {
+    name: string;
+  } | null;
 };
 
 const Contributions = () => {
