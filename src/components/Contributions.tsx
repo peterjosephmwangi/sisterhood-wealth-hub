@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
@@ -65,6 +64,11 @@ const Contributions = () => {
     }
   };
 
+  const handleContributionRecorded = () => {
+    fetchContributions();
+    fetchCurrentMonthTotal();
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-KE', {
       style: 'currency',
@@ -107,7 +111,7 @@ const Contributions = () => {
   if (loading) {
     return (
       <div className="space-y-6">
-        <ContributionHeader />
+        <ContributionHeader onContributionRecorded={handleContributionRecorded} />
         <div className="flex items-center justify-center py-8">
           <div className="text-gray-500">Loading contributions...</div>
         </div>
@@ -117,7 +121,7 @@ const Contributions = () => {
 
   return (
     <div className="space-y-6">
-      <ContributionHeader />
+      <ContributionHeader onContributionRecorded={handleContributionRecorded} />
 
       <ContributionProgressCard
         monthlyTarget={monthlyTarget}

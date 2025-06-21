@@ -1,9 +1,14 @@
 
 import React from 'react';
-import { Plus, Download } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import RecordContributionDialog from './RecordContributionDialog';
 
-const ContributionHeader = () => {
+interface ContributionHeaderProps {
+  onContributionRecorded: () => void;
+}
+
+const ContributionHeader = ({ onContributionRecorded }: ContributionHeaderProps) => {
   return (
     <div className="flex justify-between items-center">
       <h2 className="text-2xl font-bold text-gray-900">Contributions</h2>
@@ -12,10 +17,7 @@ const ContributionHeader = () => {
           <Download className="w-4 h-4 mr-2" />
           Export
         </Button>
-        <Button className="bg-purple-600 hover:bg-purple-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Record Contribution
-        </Button>
+        <RecordContributionDialog onContributionRecorded={onContributionRecorded} />
       </div>
     </div>
   );
