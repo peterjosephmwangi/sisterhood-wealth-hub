@@ -235,6 +235,31 @@ export type Database = {
         Args: { target_month: string }
         Returns: number
       }
+      get_next_meeting: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          title: string
+          meeting_date: string
+          meeting_time: string
+          location: string
+          days_until: number
+        }[]
+      }
+      get_past_meetings: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          title: string
+          meeting_date: string
+          meeting_time: string
+          location: string
+          actual_attendees: number
+          minutes: string
+          status: Database["public"]["Enums"]["meeting_status"]
+          created_at: string
+        }[]
+      }
       get_recent_activities: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -248,6 +273,20 @@ export type Database = {
       get_total_contributions: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      get_upcoming_meetings: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          title: string
+          meeting_date: string
+          meeting_time: string
+          location: string
+          expected_attendees: number
+          agenda: string[]
+          status: Database["public"]["Enums"]["meeting_status"]
+          created_at: string
+        }[]
       }
     }
     Enums: {

@@ -4,10 +4,12 @@ import { DollarSign, Users, TrendingUp, Calendar, ArrowUpRight, ArrowDownRight }
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import { useNextMeeting } from '@/hooks/useNextMeeting';
 import ProcessLoanDialog from '@/components/dashboard/ProcessLoanDialog';
 
 const Dashboard = () => {
   const { stats, loading, refetch } = useDashboardData();
+  const { nextMeeting, loading: meetingLoading } = useNextMeeting();
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-KE', {
@@ -18,18 +20,40 @@ const Dashboard = () => {
     }).format(amount);
   };
 
+  const formatTime = (timeString: string) => {
+    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
   const getNextMeetingInfo = () => {
-    // This could be enhanced to fetch from actual meetings data
-    const nextSaturday = new Date();
-    nextSaturday.setDate(nextSaturday.getDate() + (6 - nextSaturday.getDay()) % 7);
-    const daysUntil = Math.ceil((nextSaturday.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+    if (meetingLoading) {
+      return {
+        days: 'Loading...',
+        info: 'Checking schedule...'
+      };
+    }
+    
+    if (!nextMeeting) {
+      return {
+        days: 'No meeting',
+        info: 'No upcoming meetings'
+      };
+    }
+
+    const daysText = nextMeeting.days_until === 0 ? 'Today' : 
+                    nextMeeting.days_until === 1 ? 'Tomorrow' : 
+                    `${nextMeeting.days_until} days`;
+    
     return {
-      days: daysUntil > 0 ? `${daysUntil} days` : 'Today',
-      info: 'Saturday, 2:00 PM'
+      days: daysText,
+      info: `${formatTime(nextMeeting.meeting_time)} at ${nextMeeting.location}`
     };
   };
 
-  const nextMeeting = getNextMeetingInfo();
+  const nextMeetingInfo = getNextMeetingInfo();
 
   const dashboardStats = [
     {
@@ -55,8 +79,8 @@ const Dashboard = () => {
     },
     {
       title: 'Next Meeting',
-      value: nextMeeting.days,
-      change: nextMeeting.info,
+      value: nextMeetingInfo.days,
+      change: nextMeetingInfo.info,
       icon: Calendar,
       positive: true,
     },
