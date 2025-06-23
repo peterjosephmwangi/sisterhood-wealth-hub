@@ -8,8 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, AlertTriangle } from 'lucide-react';
 import { useMembers } from '@/hooks/useMembers';
+import { useLoanEligibility } from '@/hooks/useLoanEligibility';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface ProcessLoanDialogProps {
   onLoanProcessed: () => void;
@@ -26,7 +28,21 @@ const ProcessLoanDialog = ({ onLoanProcessed }: ProcessLoanDialogProps) => {
     notes: '',
   });
   const { members } = useMembers();
+  const { eligibility, loading: eligibilityLoading } = useLoanEligibility(formData.member_id);
   const { toast } = useToast();
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-KE', {
+      style: 'currency',
+      currency: 'KES',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const selectedMember = members.find(m => m.id === formData.member_id);
+  const requestedAmount = parseFloat(formData.amount) || 0;
+  const exceedsLimit = requestedAmount > eligibility.maxLoanAmount;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +51,24 @@ const ProcessLoanDialog = ({ onLoanProcessed }: ProcessLoanDialogProps) => {
       toast({
         title: "Validation Error",
         description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!eligibility.isEligible) {
+      toast({
+        title: "Validation Error",
+        description: "Member must have confirmed contributions before being eligible for a loan",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (exceedsLimit) {
+      toast({
+        title: "Validation Error",
+        description: `Loan amount exceeds member's limit of ${formatCurrency(eligibility.maxLoanAmount)}`,
         variant: "destructive",
       });
       return;
@@ -90,7 +124,7 @@ const ProcessLoanDialog = ({ onLoanProcessed }: ProcessLoanDialogProps) => {
           Process Loan
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Process New Loan</DialogTitle>
         </DialogHeader>
@@ -111,18 +145,43 @@ const ProcessLoanDialog = ({ onLoanProcessed }: ProcessLoanDialogProps) => {
             </Select>
           </div>
 
+          {selectedMember && !eligibilityLoading && (
+            <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+              <h4 className="font-medium text-sm">Loan Eligibility for {selectedMember.name}</h4>
+              <div className="text-sm space-y-1">
+                <p>Total Contributions: <span className="font-medium text-green-600">{formatCurrency(eligibility.totalContributions)}</span></p>
+                <p>Maximum Loan Amount: <span className="font-medium text-blue-600">{formatCurrency(eligibility.maxLoanAmount)}</span></p>
+                <p className="text-xs text-gray-500">*Loan limit is 3x total contributions</p>
+              </div>
+            </div>
+          )}
+
+          {selectedMember && !eligibility.isEligible && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                This member has no confirmed contributions and is not eligible for a loan.
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div>
             <Label htmlFor="amount">Loan Amount (KSh) *</Label>
             <Input
               id="amount"
               type="number"
-              min="1000"
+              min="100"
               step="100"
               placeholder="Enter amount"
               value={formData.amount}
               onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
               required
             />
+            {requestedAmount > 0 && exceedsLimit && (
+              <p className="text-sm text-red-600 mt-1">
+                Amount exceeds maximum limit of {formatCurrency(eligibility.maxLoanAmount)}
+              </p>
+            )}
           </div>
 
           <div>
@@ -164,7 +223,10 @@ const ProcessLoanDialog = ({ onLoanProcessed }: ProcessLoanDialogProps) => {
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button 
+              type="submit" 
+              disabled={loading || !eligibility.isEligible || exceedsLimit}
+            >
               {loading ? 'Processing...' : 'Process Loan'}
             </Button>
           </div>
