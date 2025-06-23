@@ -219,12 +219,34 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_active_members_count: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      get_available_loan_fund: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       get_member_total_contributions: {
         Args: { member_uuid: string }
         Returns: number
       }
       get_monthly_contributions_total: {
         Args: { target_month: string }
+        Returns: number
+      }
+      get_recent_activities: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          member_name: string
+          action: string
+          amount: number
+          created_at: string
+          activity_type: string
+        }[]
+      }
+      get_total_contributions: {
+        Args: Record<PropertyKey, never>
         Returns: number
       }
     }

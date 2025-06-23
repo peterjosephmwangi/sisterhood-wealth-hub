@@ -3,45 +3,82 @@ import React from 'react';
 import { DollarSign, Users, TrendingUp, Calendar, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useDashboardData } from '@/hooks/useDashboardData';
+import ProcessLoanDialog from '@/components/dashboard/ProcessLoanDialog';
 
 const Dashboard = () => {
-  const stats = [
+  const { stats, loading, refetch } = useDashboardData();
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-KE', {
+      style: 'currency',
+      currency: 'KES',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const getNextMeetingInfo = () => {
+    // This could be enhanced to fetch from actual meetings data
+    const nextSaturday = new Date();
+    nextSaturday.setDate(nextSaturday.getDate() + (6 - nextSaturday.getDay()) % 7);
+    const daysUntil = Math.ceil((nextSaturday.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+    return {
+      days: daysUntil > 0 ? `${daysUntil} days` : 'Today',
+      info: 'Saturday, 2:00 PM'
+    };
+  };
+
+  const nextMeeting = getNextMeetingInfo();
+
+  const dashboardStats = [
     {
       title: 'Total Contributions',
-      value: 'KSh 125,000',
+      value: loading ? 'Loading...' : formatCurrency(stats.totalContributions),
       change: '+12% from last month',
       icon: DollarSign,
       positive: true,
     },
     {
       title: 'Active Members',
-      value: '24',
+      value: loading ? 'Loading...' : stats.activeMembers.toString(),
       change: '+2 new members',
       icon: Users,
       positive: true,
     },
     {
       title: 'Available Loans',
-      value: 'KSh 85,000',
+      value: loading ? 'Loading...' : formatCurrency(stats.availableLoanFund),
       change: 'Ready for disbursement',
       icon: TrendingUp,
       positive: true,
     },
     {
       title: 'Next Meeting',
-      value: '3 days',
-      change: 'Saturday, 2:00 PM',
+      value: nextMeeting.days,
+      change: nextMeeting.info,
       icon: Calendar,
       positive: true,
     },
   ];
 
-  const recentActivity = [
-    { member: 'Grace Wanjiku', action: 'Made contribution', amount: 'KSh 5,000', time: '2 hours ago' },
-    { member: 'Mary Kamau', action: 'Loan approved', amount: 'KSh 15,000', time: '1 day ago' },
-    { member: 'Sarah Muthoni', action: 'Joined group', amount: '', time: '2 days ago' },
-    { member: 'Joyce Njeri', action: 'Made contribution', amount: 'KSh 5,000', time: '3 days ago' },
-  ];
+  const handleLoanProcessed = () => {
+    refetch();
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-gradient-to-r from-purple-600 to-green-600 rounded-lg p-6 text-white">
+          <h2 className="text-2xl font-bold mb-2">Welcome back, Admin!</h2>
+          <p className="text-purple-100">Loading your chama data...</p>
+        </div>
+        <div className="flex items-center justify-center py-8">
+          <div className="text-gray-500">Loading dashboard...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -53,7 +90,7 @@ const Dashboard = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => {
+        {dashboardStats.map((stat, index) => {
           const Icon = stat.icon;
           return (
             <Card key={index} className="hover:shadow-md transition-shadow">
@@ -102,10 +139,7 @@ const Dashboard = () => {
               <Calendar className="w-4 h-4 mr-2" />
               Schedule Meeting
             </Button>
-            <Button variant="outline" className="w-full justify-start">
-              <TrendingUp className="w-4 h-4 mr-2" />
-              Process Loan
-            </Button>
+            <ProcessLoanDialog onLoanProcessed={handleLoanProcessed} />
           </CardContent>
         </Card>
 
@@ -116,20 +150,26 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentActivity.map((activity, index) => (
-                <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">{activity.member}</p>
-                    <p className="text-sm text-gray-600">{activity.action}</p>
+              {stats.recentActivities.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">No recent activities</p>
+              ) : (
+                stats.recentActivities.map((activity, index) => (
+                  <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900">{activity.member_name}</p>
+                      <p className="text-sm text-gray-600">{activity.action}</p>
+                    </div>
+                    <div className="text-right">
+                      {activity.amount > 0 && (
+                        <p className="font-medium text-green-600">{formatCurrency(activity.amount)}</p>
+                      )}
+                      <p className="text-xs text-gray-500">
+                        {new Date(activity.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    {activity.amount && (
-                      <p className="font-medium text-green-600">{activity.amount}</p>
-                    )}
-                    <p className="text-xs text-gray-500">{activity.time}</p>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
