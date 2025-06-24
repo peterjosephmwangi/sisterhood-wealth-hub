@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useNextMeeting } from '@/hooks/useNextMeeting';
 import ProcessLoanDialog from '@/components/dashboard/ProcessLoanDialog';
+import RecordRepaymentDialog from '@/components/dashboard/RecordRepaymentDialog';
 
 const Dashboard = () => {
   const { stats, loading, refetch } = useDashboardData();
@@ -90,6 +91,10 @@ const Dashboard = () => {
     refetch();
   };
 
+  const handleRepaymentRecorded = () => {
+    refetch();
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -164,6 +169,7 @@ const Dashboard = () => {
               Schedule Meeting
             </Button>
             <ProcessLoanDialog onLoanProcessed={handleLoanProcessed} />
+            <RecordRepaymentDialog onRepaymentRecorded={handleRepaymentRecorded} />
           </CardContent>
         </Card>
 

@@ -53,6 +53,47 @@ export type Database = {
           },
         ]
       }
+      loan_repayments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          loan_id: string
+          notes: string | null
+          payment_date: string
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          loan_id: string
+          notes?: string | null
+          payment_date?: string
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          loan_id?: string
+          notes?: string | null
+          payment_date?: string
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loan_repayments_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "loans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       loans: {
         Row: {
           amount: number
@@ -226,6 +267,28 @@ export type Database = {
       get_available_loan_fund: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      get_loan_balance: {
+        Args: { loan_uuid: string }
+        Returns: number
+      }
+      get_loan_total_repaid: {
+        Args: { loan_uuid: string }
+        Returns: number
+      }
+      get_member_active_loans: {
+        Args: { member_uuid: string }
+        Returns: {
+          id: string
+          amount: number
+          interest_rate: number
+          due_date: string
+          loan_date: string
+          total_amount: number
+          total_repaid: number
+          balance: number
+          status: string
+        }[]
       }
       get_member_total_contributions: {
         Args: { member_uuid: string }
