@@ -50,7 +50,7 @@ export const useLoanRepayments = (loanId: string | null) => {
     loan_id: string;
     amount: number;
     payment_date: string;
-    payment_method: string;
+    payment_method: "m_pesa" | "bank_transfer" | "cash";
     notes?: string;
   }) => {
     try {
