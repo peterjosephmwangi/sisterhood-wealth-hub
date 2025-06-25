@@ -6,13 +6,18 @@ import { Button } from '@/components/ui/button';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useNextMeeting } from '@/hooks/useNextMeeting';
 import { useMonthlyTargets } from '@/hooks/useMonthlyTargets';
+import { useInterestProfits } from '@/hooks/useInterestProfits';
 import ProcessLoanDialog from '@/components/dashboard/ProcessLoanDialog';
 import RecordRepaymentDialog from '@/components/dashboard/RecordRepaymentDialog';
+import InterestProfitCard from '@/components/dashboard/InterestProfitCard';
+import InterestProfitDialog from '@/components/dashboard/InterestProfitDialog';
+import InterestProfitStats from '@/components/dashboard/InterestProfitStats';
 
 const Dashboard = () => {
   const { stats, loading, refetch } = useDashboardData();
   const { nextMeeting, loading: meetingLoading } = useNextMeeting();
   const { currentTarget, loading: targetLoading } = useMonthlyTargets();
+  const { totalInterestProfit, loading: profitLoading } = useInterestProfits();
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-KE', {
@@ -158,6 +163,12 @@ const Dashboard = () => {
         })}
       </div>
 
+      {/* Interest Profit Statistics */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-gray-900">Interest Profit Overview</h3>
+        <InterestProfitStats />
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Quick Actions */}
         <Card>
@@ -179,40 +190,44 @@ const Dashboard = () => {
             </Button>
             <ProcessLoanDialog onLoanProcessed={handleLoanProcessed} />
             <RecordRepaymentDialog onRepaymentRecorded={handleRepaymentRecorded} />
+            <InterestProfitDialog />
           </CardContent>
         </Card>
 
-        {/* Recent Activity */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {stats.recentActivities.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No recent activities</p>
-              ) : (
-                stats.recentActivities.map((activity, index) => (
-                  <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-900">{activity.member_name}</p>
-                      <p className="text-sm text-gray-600">{activity.action}</p>
-                    </div>
-                    <div className="text-right">
-                      {activity.amount > 0 && (
-                        <p className="font-medium text-green-600">{formatCurrency(activity.amount)}</p>
-                      )}
-                      <p className="text-xs text-gray-500">
-                        {new Date(activity.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        {/* Interest Profit Card */}
+        <InterestProfitCard />
       </div>
+
+      {/* Recent Activity */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Activity</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {stats.recentActivities.length === 0 ? (
+              <p className="text-gray-500 text-center py-4">No recent activities</p>
+            ) : (
+              stats.recentActivities.map((activity, index) => (
+                <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">{activity.member_name}</p>
+                    <p className="text-sm text-gray-600">{activity.action}</p>
+                  </div>
+                  <div className="text-right">
+                    {activity.amount > 0 && (
+                      <p className="font-medium text-green-600">{formatCurrency(activity.amount)}</p>
+                    )}
+                    <p className="text-xs text-gray-500">
+                      {new Date(activity.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

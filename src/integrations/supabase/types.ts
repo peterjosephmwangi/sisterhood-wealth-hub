@@ -113,6 +113,13 @@ export type Database = {
             foreignKeyName: "loan_repayments_loan_id_fkey"
             columns: ["loan_id"]
             isOneToOne: false
+            referencedRelation: "loan_interest_profits"
+            referencedColumns: ["loan_id"]
+          },
+          {
+            foreignKeyName: "loan_repayments_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
             referencedRelation: "loans"
             referencedColumns: ["id"]
           },
@@ -281,7 +288,30 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      loan_interest_profits: {
+        Row: {
+          due_date: string | null
+          interest_profit_earned: number | null
+          interest_rate: number | null
+          loan_date: string | null
+          loan_id: string | null
+          member_id: string | null
+          member_name: string | null
+          principal_amount: number | null
+          status: string | null
+          total_interest_expected: number | null
+          total_repaid: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loans_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       get_active_members_count: {
@@ -311,6 +341,19 @@ export type Database = {
           total_amount: number
           total_repaid: number
           balance: number
+          status: string
+        }[]
+      }
+      get_member_interest_profit: {
+        Args: { member_uuid: string }
+        Returns: {
+          loan_id: string
+          principal_amount: number
+          interest_rate: number
+          total_interest_expected: number
+          interest_profit_earned: number
+          loan_date: string
+          due_date: string
           status: string
         }[]
       }
@@ -362,6 +405,10 @@ export type Database = {
         }[]
       }
       get_total_contributions: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      get_total_interest_profit: {
         Args: Record<PropertyKey, never>
         Returns: number
       }
