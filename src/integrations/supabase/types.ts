@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      contribution_targets: {
+        Row: {
+          created_at: string
+          id: string
+          target_amount: number
+          target_month: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          target_amount: number
+          target_month: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          target_amount?: number
+          target_month?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       contributions: {
         Row: {
           amount: number
@@ -298,6 +322,10 @@ export type Database = {
         Args: { target_month: string }
         Returns: number
       }
+      get_monthly_target: {
+        Args: { target_month?: string }
+        Returns: number
+      }
       get_next_meeting: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -350,6 +378,10 @@ export type Database = {
           status: Database["public"]["Enums"]["meeting_status"]
           created_at: string
         }[]
+      }
+      set_monthly_target: {
+        Args: { target_month: string; target_amount: number }
+        Returns: undefined
       }
     }
     Enums: {

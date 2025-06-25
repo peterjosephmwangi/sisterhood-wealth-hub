@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
+import { useMonthlyTargets } from '@/hooks/useMonthlyTargets';
 import ContributionHeader from './contributions/ContributionHeader';
 import ContributionProgressCard from './contributions/ContributionProgressCard';
 import ContributionStatsGrid from './contributions/ContributionStatsGrid';
@@ -17,9 +19,9 @@ const Contributions = () => {
   const [selectedMonth, setSelectedMonth] = useState('all');
   const [contributions, setContributions] = useState<ContributionWithMember[]>([]);
   const [loading, setLoading] = useState(true);
-  const [monthlyTarget] = useState(120000); // KSh 120,000
   const [currentMonthTotal, setCurrentMonthTotal] = useState(0);
   const { toast } = useToast();
+  const { currentTarget, loading: targetLoading, refetch: refetchTarget } = useMonthlyTargets();
 
   useEffect(() => {
     fetchContributions();
@@ -69,6 +71,10 @@ const Contributions = () => {
     fetchCurrentMonthTotal();
   };
 
+  const handleTargetUpdated = () => {
+    refetchTarget();
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-KE', {
       style: 'currency',
@@ -108,10 +114,13 @@ const Contributions = () => {
   const averagePerMember = confirmedContributions.length > 0 ? currentMonthTotal / new Set(confirmedContributions.map(c => c.member_id)).size : 0;
   const paymentRate = contributions.length > 0 ? (confirmedContributions.length / contributions.length) * 100 : 100;
 
-  if (loading) {
+  if (loading || targetLoading) {
     return (
       <div className="space-y-6">
-        <ContributionHeader onContributionRecorded={handleContributionRecorded} />
+        <ContributionHeader 
+          onContributionRecorded={handleContributionRecorded}
+          onTargetUpdated={handleTargetUpdated}
+        />
         <div className="flex items-center justify-center py-8">
           <div className="text-gray-500">Loading contributions...</div>
         </div>
@@ -121,10 +130,13 @@ const Contributions = () => {
 
   return (
     <div className="space-y-6">
-      <ContributionHeader onContributionRecorded={handleContributionRecorded} />
+      <ContributionHeader 
+        onContributionRecorded={handleContributionRecorded}
+        onTargetUpdated={handleTargetUpdated}
+      />
 
       <ContributionProgressCard
-        monthlyTarget={monthlyTarget}
+        monthlyTarget={currentTarget}
         currentMonthTotal={currentMonthTotal}
         formatCurrency={formatCurrency}
       />

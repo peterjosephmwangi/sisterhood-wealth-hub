@@ -5,12 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useNextMeeting } from '@/hooks/useNextMeeting';
+import { useMonthlyTargets } from '@/hooks/useMonthlyTargets';
 import ProcessLoanDialog from '@/components/dashboard/ProcessLoanDialog';
 import RecordRepaymentDialog from '@/components/dashboard/RecordRepaymentDialog';
 
 const Dashboard = () => {
   const { stats, loading, refetch } = useDashboardData();
   const { nextMeeting, loading: meetingLoading } = useNextMeeting();
+  const { currentTarget, loading: targetLoading } = useMonthlyTargets();
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-KE', {
@@ -56,11 +58,18 @@ const Dashboard = () => {
 
   const nextMeetingInfo = getNextMeetingInfo();
 
+  // Calculate progress towards current month target
+  const getCurrentMonthProgress = () => {
+    if (targetLoading || loading) return '+0% towards target';
+    const progress = currentTarget > 0 ? ((stats.totalContributions / currentTarget) * 100) : 0;
+    return `${progress.toFixed(1)}% of monthly target`;
+  };
+
   const dashboardStats = [
     {
       title: 'Total Contributions',
       value: loading ? 'Loading...' : formatCurrency(stats.totalContributions),
-      change: '+12% from last month',
+      change: getCurrentMonthProgress(),
       icon: DollarSign,
       positive: true,
     },
@@ -95,7 +104,7 @@ const Dashboard = () => {
     refetch();
   };
 
-  if (loading) {
+  if (loading || targetLoading) {
     return (
       <div className="space-y-6">
         <div className="bg-gradient-to-r from-purple-600 to-green-600 rounded-lg p-6 text-white">

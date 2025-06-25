@@ -1,23 +1,32 @@
 
 import React from 'react';
-import { Download } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import RecordContributionDialog from './RecordContributionDialog';
+import SetTargetDialog from './SetTargetDialog';
 
 interface ContributionHeaderProps {
   onContributionRecorded: () => void;
+  onTargetUpdated?: () => void;
 }
 
-const ContributionHeader = ({ onContributionRecorded }: ContributionHeaderProps) => {
+const ContributionHeader = ({ onContributionRecorded, onTargetUpdated }: ContributionHeaderProps) => {
   return (
-    <div className="flex justify-between items-center">
-      <h2 className="text-2xl font-bold text-gray-900">Contributions</h2>
-      <div className="flex space-x-3">
-        <Button variant="outline">
-          <Download className="w-4 h-4 mr-2" />
-          Export
-        </Button>
-        <RecordContributionDialog onContributionRecorded={onContributionRecorded} />
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Contributions</h1>
+        <p className="text-gray-600 mt-1">Track and manage member contributions</p>
+      </div>
+      <div className="flex gap-2 w-full sm:w-auto">
+        <div className="flex-1 sm:flex-initial">
+          <SetTargetDialog onTargetUpdated={onTargetUpdated} />
+        </div>
+        <RecordContributionDialog onContributionRecorded={onContributionRecorded}>
+          <Button className="flex-1 sm:flex-initial bg-purple-600 hover:bg-purple-700">
+            <Plus className="w-4 h-4 mr-2" />
+            Record Contribution
+          </Button>
+        </RecordContributionDialog>
       </div>
     </div>
   );
