@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
 import {
@@ -25,9 +24,10 @@ import { useMembers } from '@/hooks/useMembers';
 
 interface RecordContributionDialogProps {
   onContributionRecorded: () => void;
+  children?: React.ReactNode;
 }
 
-const RecordContributionDialog = ({ onContributionRecorded }: RecordContributionDialogProps) => {
+const RecordContributionDialog = ({ onContributionRecorded, children }: RecordContributionDialogProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -113,10 +113,12 @@ const RecordContributionDialog = ({ onContributionRecorded }: RecordContribution
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-purple-600 hover:bg-purple-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Record Contribution
-        </Button>
+        {children || (
+          <Button className="bg-purple-600 hover:bg-purple-700">
+            <Plus className="w-4 h-4 mr-2" />
+            Record Contribution
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
