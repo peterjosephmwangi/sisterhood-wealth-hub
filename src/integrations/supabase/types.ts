@@ -77,6 +77,48 @@ export type Database = {
           },
         ]
       }
+      dividend_declarations: {
+        Row: {
+          calculation_method: string
+          created_at: string
+          declaration_date: string
+          dividend_per_share: number
+          dividend_period_end: string
+          dividend_period_start: string
+          id: string
+          notes: string | null
+          status: string
+          total_dividend_amount: number
+          updated_at: string
+        }
+        Insert: {
+          calculation_method?: string
+          created_at?: string
+          declaration_date?: string
+          dividend_per_share?: number
+          dividend_period_end: string
+          dividend_period_start: string
+          id?: string
+          notes?: string | null
+          status?: string
+          total_dividend_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          calculation_method?: string
+          created_at?: string
+          declaration_date?: string
+          dividend_per_share?: number
+          dividend_period_end?: string
+          dividend_period_start?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          total_dividend_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       loan_repayments: {
         Row: {
           amount: number
@@ -253,6 +295,66 @@ export type Database = {
         }
         Relationships: []
       }
+      member_dividends: {
+        Row: {
+          contribution_percentage: number
+          created_at: string
+          dividend_amount: number
+          dividend_declaration_id: string
+          id: string
+          member_contribution_amount: number
+          member_id: string
+          payment_date: string | null
+          payment_method: string | null
+          payment_reference: string | null
+          payment_status: string
+          updated_at: string
+        }
+        Insert: {
+          contribution_percentage?: number
+          created_at?: string
+          dividend_amount?: number
+          dividend_declaration_id: string
+          id?: string
+          member_contribution_amount?: number
+          member_id: string
+          payment_date?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          payment_status?: string
+          updated_at?: string
+        }
+        Update: {
+          contribution_percentage?: number
+          created_at?: string
+          dividend_amount?: number
+          dividend_declaration_id?: string
+          id?: string
+          member_contribution_amount?: number
+          member_id?: string
+          payment_date?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          payment_status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_dividends_dividend_declaration_id_fkey"
+            columns: ["dividend_declaration_id"]
+            isOneToOne: false
+            referencedRelation: "dividend_declarations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_dividends_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       members: {
         Row: {
           created_at: string
@@ -314,6 +416,21 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_member_dividends: {
+        Args: {
+          declaration_id: string
+          period_start: string
+          period_end: string
+          total_dividend: number
+        }
+        Returns: {
+          member_id: string
+          member_name: string
+          member_contribution: number
+          contribution_percentage: number
+          dividend_amount: number
+        }[]
+      }
       get_active_members_count: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -344,6 +461,20 @@ export type Database = {
           status: string
         }[]
       }
+      get_member_dividend_history: {
+        Args: { member_uuid: string }
+        Returns: {
+          declaration_date: string
+          dividend_period_start: string
+          dividend_period_end: string
+          total_dividend_amount: number
+          member_contribution: number
+          contribution_percentage: number
+          dividend_amount: number
+          payment_status: string
+          payment_date: string
+        }[]
+      }
       get_member_interest_profit: {
         Args: { member_uuid: string }
         Returns: {
@@ -358,6 +489,10 @@ export type Database = {
         }[]
       }
       get_member_total_contributions: {
+        Args: { member_uuid: string }
+        Returns: number
+      }
+      get_member_total_dividends: {
         Args: { member_uuid: string }
         Returns: number
       }
