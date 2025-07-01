@@ -5,6 +5,7 @@ import Dashboard from '@/components/Dashboard';
 import Members from '@/components/Members';
 import Contributions from '@/components/Contributions';
 import Meetings from '@/components/Meetings';
+import Dividends from '@/components/Dividends';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -19,6 +20,8 @@ const Index = () => {
         return <Contributions />;
       case 'meetings':
         return <Meetings />;
+      case 'dividends':
+        return <Dividends />;
       default:
         return <Dashboard />;
     }

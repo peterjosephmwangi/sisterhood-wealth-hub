@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Users, DollarSign, Calendar, TrendingUp, Menu, Bell } from 'lucide-react';
+import { Users, DollarSign, Calendar, TrendingUp, Menu, Bell, PieChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Navigation = ({ activeTab, setActiveTab }: { activeTab: string; setActiveTab: (tab: string) => void }) => {
@@ -9,6 +9,7 @@ const Navigation = ({ activeTab, setActiveTab }: { activeTab: string; setActiveT
     { id: 'members', label: 'Members', icon: Users },
     { id: 'contributions', label: 'Contributions', icon: DollarSign },
     { id: 'meetings', label: 'Meetings', icon: Calendar },
+    { id: 'dividends', label: 'Dividends', icon: PieChart },
   ];
 
   return (
