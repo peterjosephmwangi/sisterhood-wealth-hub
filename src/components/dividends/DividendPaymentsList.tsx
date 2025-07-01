@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import {
   Table,
@@ -88,13 +87,13 @@ export const DividendPaymentsList: React.FC<DividendPaymentsListProps> = ({
 
   const getPaymentStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive"> = {
-      pending: "outline",
+      pending: "default",
       paid: "secondary",
       failed: "destructive",
     };
 
     return (
-      <Badge variant={variants[status] || "outline"}>
+      <Badge variant={variants[status] || "default"}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </Badge>
     );
