@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Navigation from '@/components/Navigation';
 import Dashboard from '@/components/Dashboard';
@@ -6,6 +5,7 @@ import Members from '@/components/Members';
 import Contributions from '@/components/Contributions';
 import Meetings from '@/components/Meetings';
 import Dividends from '@/components/Dividends';
+import AuditTrail from '@/components/audit/AuditTrail';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -22,6 +22,8 @@ const Index = () => {
         return <Meetings />;
       case 'dividends':
         return <Dividends />;
+      case 'audit':
+        return <AuditTrail />;
       default:
         return <Dashboard />;
     }

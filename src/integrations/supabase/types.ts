@@ -9,6 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip_address: unknown | null
+          new_values: Json | null
+          old_values: Json | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       contribution_targets: {
         Row: {
           created_at: string
@@ -435,6 +474,19 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      get_audit_trail: {
+        Args: { p_limit?: number; p_offset?: number }
+        Returns: {
+          id: string
+          action: string
+          entity_type: string
+          entity_id: string
+          old_values: Json
+          new_values: Json
+          created_at: string
+          user_name: string
+        }[]
+      }
       get_available_loan_fund: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -560,6 +612,16 @@ export type Database = {
           status: Database["public"]["Enums"]["meeting_status"]
           created_at: string
         }[]
+      }
+      log_activity: {
+        Args: {
+          p_action: string
+          p_entity_type: string
+          p_entity_id?: string
+          p_old_values?: Json
+          p_new_values?: Json
+        }
+        Returns: string
       }
       set_monthly_target: {
         Args: { target_month: string; target_amount: number }
