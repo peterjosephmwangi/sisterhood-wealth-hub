@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
 import {
@@ -18,45 +19,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useMembers } from '@/hooks/useMembers';
+import { useAuditTrail } from '@/hooks/useAuditTrail';
 
-interface RecordContributionDialogProps {
-  onContributionRecorded: () => void;
-  children?: React.ReactNode;
-}
-
-const RecordContributionDialog = ({ onContributionRecorded, children }: RecordContributionDialogProps) => {
+const RecordContributionDialog = ({ onContributionRecorded }: { onContributionRecorded: () => void }) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     member_id: '',
     amount: '',
-    payment_method: '',
+    payment_method: 'cash' as const,
     contribution_date: new Date().toISOString().split('T')[0],
     notes: ''
   });
   const { toast } = useToast();
   const { members } = useMembers();
+  const { logActivity } = useAuditTrail();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.member_id || !formData.amount || !formData.payment_method) {
+    if (!formData.member_id || !formData.amount) {
       toast({
         title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const amount = parseFloat(formData.amount);
-    if (isNaN(amount) || amount <= 0) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid amount",
+        description: "Member and amount are required",
         variant: "destructive",
       });
       return;
@@ -65,20 +54,31 @@ const RecordContributionDialog = ({ onContributionRecorded, children }: RecordCo
     setLoading(true);
 
     try {
-      const { error } = await supabase
+      const contributionData = {
+        member_id: formData.member_id,
+        amount: parseFloat(formData.amount),
+        payment_method: formData.payment_method,
+        contribution_date: formData.contribution_date,
+        notes: formData.notes.trim() || null,
+        status: 'confirmed' as const
+      };
+
+      const { data, error } = await supabase
         .from('contributions')
-        .insert([
-          {
-            member_id: formData.member_id,
-            amount: amount,
-            payment_method: formData.payment_method as 'm_pesa' | 'bank_transfer' | 'cash',
-            contribution_date: formData.contribution_date,
-            notes: formData.notes.trim() || null,
-            status: 'confirmed' // Default to confirmed for manual entries
-          }
-        ]);
+        .insert([contributionData])
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Log the contribution activity
+      await logActivity(
+        'contribution_recorded',
+        'contributions',
+        data.id,
+        null,
+        contributionData
+      );
 
       toast({
         title: "Success",
@@ -88,7 +88,7 @@ const RecordContributionDialog = ({ onContributionRecorded, children }: RecordCo
       setFormData({
         member_id: '',
         amount: '',
-        payment_method: '',
+        payment_method: 'cash',
         contribution_date: new Date().toISOString().split('T')[0],
         notes: ''
       });
@@ -113,18 +113,16 @@ const RecordContributionDialog = ({ onContributionRecorded, children }: RecordCo
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {children || (
-          <Button className="bg-purple-600 hover:bg-purple-700">
-            <Plus className="w-4 h-4 mr-2" />
-            Record Contribution
-          </Button>
-        )}
+        <Button className="bg-green-600 hover:bg-green-700">
+          <Plus className="w-4 h-4 mr-2" />
+          Record Contribution
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Record New Contribution</DialogTitle>
           <DialogDescription>
-            Record a new contribution from a member. All fields marked with * are required.
+            Record a member's contribution to the chama fund.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -145,29 +143,29 @@ const RecordContributionDialog = ({ onContributionRecorded, children }: RecordCo
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount (KSh) *</Label>
+            <Label htmlFor="amount">Amount (KES) *</Label>
             <Input
               id="amount"
               type="number"
-              step="0.01"
-              min="0"
               value={formData.amount}
               onChange={(e) => handleInputChange('amount', e.target.value)}
               placeholder="Enter amount"
+              min="0"
+              step="0.01"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="payment_method">Payment Method *</Label>
+            <Label htmlFor="payment_method">Payment Method</Label>
             <Select value={formData.payment_method} onValueChange={(value) => handleInputChange('payment_method', value)}>
               <SelectTrigger>
-                <SelectValue placeholder="Select payment method" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="cash">Cash</SelectItem>
                 <SelectItem value="m_pesa">M-Pesa</SelectItem>
                 <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                <SelectItem value="cash">Cash</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -179,17 +177,17 @@ const RecordContributionDialog = ({ onContributionRecorded, children }: RecordCo
               type="date"
               value={formData.contribution_date}
               onChange={(e) => handleInputChange('contribution_date', e.target.value)}
-              required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Input
+            <Label htmlFor="notes">Notes (Optional)</Label>
+            <Textarea
               id="notes"
               value={formData.notes}
               onChange={(e) => handleInputChange('notes', e.target.value)}
-              placeholder="Optional notes"
+              placeholder="Add any additional notes..."
+              rows={3}
             />
           </div>
 
@@ -205,7 +203,7 @@ const RecordContributionDialog = ({ onContributionRecorded, children }: RecordCo
             <Button 
               type="submit" 
               disabled={loading}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-green-600 hover:bg-green-700"
             >
               {loading ? 'Recording...' : 'Record Contribution'}
             </Button>

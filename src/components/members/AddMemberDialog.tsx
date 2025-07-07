@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuditTrail } from '@/hooks/useAuditTrail';
 
 const AddMemberDialog = ({ onMemberAdded }: { onMemberAdded: () => void }) => {
   const [open, setOpen] = useState(false);
@@ -24,6 +25,7 @@ const AddMemberDialog = ({ onMemberAdded }: { onMemberAdded: () => void }) => {
     email: ''
   });
   const { toast } = useToast();
+  const { logActivity } = useAuditTrail();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,17 +42,28 @@ const AddMemberDialog = ({ onMemberAdded }: { onMemberAdded: () => void }) => {
     setLoading(true);
 
     try {
-      const { error } = await supabase
+      const memberData = {
+        name: formData.name.trim(),
+        phone: formData.phone.trim(),
+        email: formData.email.trim() || null,
+      };
+
+      const { data, error } = await supabase
         .from('members')
-        .insert([
-          {
-            name: formData.name.trim(),
-            phone: formData.phone.trim(),
-            email: formData.email.trim() || null,
-          }
-        ]);
+        .insert([memberData])
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Log the member creation activity
+      await logActivity(
+        'member_created',
+        'members',
+        data.id,
+        null,
+        memberData
+      );
 
       toast({
         title: "Success",

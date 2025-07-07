@@ -1,35 +1,43 @@
 
 import React, { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { DollarSign } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { TrendingUp, AlertTriangle, Ban } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { useMembers } from '@/hooks/useMembers';
 import { useLoanEligibility } from '@/hooks/useLoanEligibility';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useAuditTrail } from '@/hooks/useAuditTrail';
 
-interface ProcessLoanDialogProps {
-  onLoanProcessed: () => void;
-}
-
-const ProcessLoanDialog = ({ onLoanProcessed }: ProcessLoanDialogProps) => {
+const ProcessLoanDialog = ({ onLoanProcessed }: { onLoanProcessed: () => void }) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     member_id: '',
     amount: '',
-    interest_rate: '10',
-    due_date: '',
-    notes: '',
+    interest_rate: '5',
+    due_date: ''
   });
-  const { members } = useMembers();
-  const { eligibility, loading: eligibilityLoading } = useLoanEligibility(formData.member_id);
   const { toast } = useToast();
+  const { members } = useMembers();
+  const { eligibility } = useLoanEligibility(formData.member_id || null);
+  const { logActivity } = useAuditTrail();
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-KE', {
@@ -40,78 +48,76 @@ const ProcessLoanDialog = ({ onLoanProcessed }: ProcessLoanDialogProps) => {
     }).format(amount);
   };
 
-  const selectedMember = members.find(m => m.id === formData.member_id);
-  const requestedAmount = parseFloat(formData.amount) || 0;
-  const exceedsLimit = requestedAmount > eligibility.maxLoanAmount;
-  const exceedsAvailableFund = requestedAmount > eligibility.availableLoanFund;
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.member_id || !formData.amount || !formData.due_date) {
       toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields",
+        title: "Error",
+        description: "All fields are required",
         variant: "destructive",
       });
       return;
     }
 
-    if (!eligibility.isEligible) {
-      const reasons = eligibility.eligibilityReasons.join(', ');
+    const loanAmount = parseFloat(formData.amount);
+    
+    if (loanAmount > eligibility.maxLoanAmount) {
       toast({
-        title: "Loan Not Eligible",
-        description: `Cannot process loan: ${reasons}`,
+        title: "Error",
+        description: `Loan amount exceeds maximum allowed of ${formatCurrency(eligibility.maxLoanAmount)}`,
         variant: "destructive",
       });
       return;
     }
 
-    if (exceedsLimit) {
+    if (loanAmount > eligibility.availableLoanFund) {
       toast({
-        title: "Validation Error",
-        description: `Loan amount exceeds member's limit of ${formatCurrency(eligibility.maxLoanAmount)}`,
+        title: "Error",
+        description: `Insufficient funds available. Available: ${formatCurrency(eligibility.availableLoanFund)}`,
         variant: "destructive",
       });
       return;
     }
 
-    if (exceedsAvailableFund) {
-      toast({
-        title: "Insufficient Funds",
-        description: `Loan amount exceeds available fund of ${formatCurrency(eligibility.availableLoanFund)}`,
-        variant: "destructive",
-      });
-      return;
-    }
+    setLoading(true);
 
     try {
-      setLoading(true);
+      const loanData = {
+        member_id: formData.member_id,
+        amount: loanAmount,
+        interest_rate: parseFloat(formData.interest_rate),
+        due_date: formData.due_date,
+        status: 'approved'
+      };
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('loans')
-        .insert({
-          member_id: formData.member_id,
-          amount: parseFloat(formData.amount),
-          interest_rate: parseFloat(formData.interest_rate),
-          due_date: formData.due_date,
-          status: 'approved',
-          approved_by: 'admin',
-        });
+        .insert([loanData])
+        .select()
+        .single();
 
       if (error) throw error;
 
+      // Log the loan processing activity
+      await logActivity(
+        'loan_approved',
+        'loans',
+        data.id,
+        null,
+        loanData
+      );
+
       toast({
         title: "Success",
-        description: "Loan has been processed successfully",
+        description: "Loan processed successfully",
       });
 
       setFormData({
         member_id: '',
         amount: '',
-        interest_rate: '10',
-        due_date: '',
-        notes: '',
+        interest_rate: '5',
+        due_date: ''
       });
       setOpen(false);
       onLoanProcessed();
@@ -119,7 +125,7 @@ const ProcessLoanDialog = ({ onLoanProcessed }: ProcessLoanDialogProps) => {
       console.error('Error processing loan:', error);
       toast({
         title: "Error",
-        description: "Failed to process loan",
+        description: "Failed to process loan. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -127,27 +133,36 @@ const ProcessLoanDialog = ({ onLoanProcessed }: ProcessLoanDialogProps) => {
     }
   };
 
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const selectedMember = members.find(m => m.id === formData.member_id);
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="w-full justify-start">
-          <TrendingUp className="w-4 h-4 mr-2" />
+        <Button className="bg-blue-600 hover:bg-blue-700">
+          <DollarSign className="w-4 h-4 mr-2" />
           Process Loan
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Process New Loan</DialogTitle>
+          <DialogDescription>
+            Approve and process a loan for a member.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="member">Member *</Label>
-            <Select value={formData.member_id} onValueChange={(value) => setFormData(prev => ({ ...prev, member_id: value }))}>
+            <Select value={formData.member_id} onValueChange={(value) => handleInputChange('member_id', value)}>
               <SelectTrigger>
-                <SelectValue placeholder="Select member" />
+                <SelectValue placeholder="Select a member" />
               </SelectTrigger>
               <SelectContent>
-                {members.filter(m => m.status === 'active').map((member) => (
+                {members.filter(member => member.status === 'active').map((member) => (
                   <SelectItem key={member.id} value={member.id}>
                     {member.name}
                   </SelectItem>
@@ -156,117 +171,96 @@ const ProcessLoanDialog = ({ onLoanProcessed }: ProcessLoanDialogProps) => {
             </Select>
           </div>
 
-          {selectedMember && !eligibilityLoading && (
-            <div className="space-y-3">
-              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                <h4 className="font-medium text-sm">Loan Eligibility for {selectedMember.name}</h4>
-                <div className="text-sm space-y-1">
-                  <p>Total Contributions: <span className="font-medium text-green-600">{formatCurrency(eligibility.totalContributions)}</span></p>
-                  <p>Maximum Loan Amount: <span className="font-medium text-blue-600">{formatCurrency(eligibility.maxLoanAmount)}</span></p>
-                  <p>Available Loan Fund: <span className="font-medium text-purple-600">{formatCurrency(eligibility.availableLoanFund)}</span></p>
-                  <p className="text-xs text-gray-500">*Loan limit is 3x total contributions</p>
+          {formData.member_id && (
+            <div className="bg-gray-50 p-3 rounded-lg space-y-2">
+              <h4 className="font-semibold text-sm">Loan Eligibility</h4>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <span className="text-gray-600">Total Contributions:</span>
+                  <p className="font-medium">{formatCurrency(eligibility.totalContributions)}</p>
+                </div>
+                <div>
+                  <span className="text-gray-600">Max Loan Amount:</span>
+                  <p className="font-medium">{formatCurrency(eligibility.maxLoanAmount)}</p>
+                </div>
+                <div>
+                  <span className="text-gray-600">Available Fund:</span>
+                  <p className="font-medium">{formatCurrency(eligibility.availableLoanFund)}</p>
+                </div>
+                <div>
+                  <span className="text-gray-600">Eligible:</span>
+                  <p className={`font-medium ${eligibility.isEligible ? 'text-green-600' : 'text-red-600'}`}>
+                    {eligibility.isEligible ? 'Yes' : 'No'}
+                  </p>
                 </div>
               </div>
-
-              {eligibility.hasExistingLoan && (
-                <Alert variant="destructive">
-                  <Ban className="h-4 w-4" />
-                  <AlertDescription>
-                    This member has an existing active loan and cannot take another loan until it's repaid.
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {eligibility.availableLoanFund <= 0 && (
-                <Alert variant="destructive">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    No funds are currently available for lending. All funds have been disbursed as loans.
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {eligibility.totalContributions === 0 && (
-                <Alert variant="destructive">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    This member has no confirmed contributions and is not eligible for a loan.
-                  </AlertDescription>
-                </Alert>
+              {!eligibility.isEligible && (
+                <div className="mt-2">
+                  <span className="text-red-600 text-sm">Reasons:</span>
+                  <ul className="text-red-600 text-sm list-disc list-inside">
+                    {eligibility.eligibilityReasons.map((reason, index) => (
+                      <li key={index}>{reason}</li>
+                    ))}
+                  </ul>
+                </div>
               )}
             </div>
           )}
-
-          <div>
-            <Label htmlFor="amount">Loan Amount (KSh) *</Label>
+          
+          <div className="space-y-2">
+            <Label htmlFor="amount">Loan Amount (KES) *</Label>
             <Input
               id="amount"
               type="number"
-              min="100"
-              step="100"
-              placeholder="Enter amount"
               value={formData.amount}
-              onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+              onChange={(e) => handleInputChange('amount', e.target.value)}
+              placeholder="Enter loan amount"
+              min="0"
+              step="0.01"
               required
+              disabled={!eligibility.isEligible}
             />
-            {requestedAmount > 0 && (
-              <div className="mt-1 space-y-1">
-                {exceedsLimit && (
-                  <p className="text-sm text-red-600">
-                    Amount exceeds maximum limit of {formatCurrency(eligibility.maxLoanAmount)}
-                  </p>
-                )}
-                {exceedsAvailableFund && (
-                  <p className="text-sm text-red-600">
-                    Amount exceeds available fund of {formatCurrency(eligibility.availableLoanFund)}
-                  </p>
-                )}
-              </div>
-            )}
           </div>
 
-          <div>
-            <Label htmlFor="interest_rate">Interest Rate (%)</Label>
+          <div className="space-y-2">
+            <Label htmlFor="interest_rate">Interest Rate (%) *</Label>
             <Input
               id="interest_rate"
               type="number"
-              min="0"
-              max="50"
-              step="0.5"
-              placeholder="10"
               value={formData.interest_rate}
-              onChange={(e) => setFormData(prev => ({ ...prev, interest_rate: e.target.value }))}
+              onChange={(e) => handleInputChange('interest_rate', e.target.value)}
+              placeholder="Enter interest rate"
+              min="0"
+              step="0.1"
+              required
             />
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="due_date">Due Date *</Label>
             <Input
               id="due_date"
               type="date"
               value={formData.due_date}
-              onChange={(e) => setFormData(prev => ({ ...prev, due_date: e.target.value }))}
+              onChange={(e) => handleInputChange('due_date', e.target.value)}
+              min={new Date().toISOString().split('T')[0]}
               required
             />
           </div>
 
-          <div>
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              placeholder="Additional notes about the loan..."
-              value={formData.notes}
-              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-            />
-          </div>
-
-          <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setOpen(false)}
+              disabled={loading}
+            >
               Cancel
             </Button>
             <Button 
               type="submit" 
-              disabled={loading || !eligibility.isEligible || exceedsLimit || exceedsAvailableFund}
+              disabled={loading || !eligibility.isEligible}
+              className="bg-blue-600 hover:bg-blue-700"
             >
               {loading ? 'Processing...' : 'Process Loan'}
             </Button>
