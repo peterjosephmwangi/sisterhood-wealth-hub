@@ -1,7 +1,5 @@
 
 import React from 'react';
-import { Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import RecordContributionDialog from './RecordContributionDialog';
 import SetTargetDialog from './SetTargetDialog';
 
@@ -21,12 +19,7 @@ const ContributionHeader = ({ onContributionRecorded, onTargetUpdated }: Contrib
         <div className="flex-1 sm:flex-initial">
           <SetTargetDialog onTargetUpdated={onTargetUpdated} />
         </div>
-        <RecordContributionDialog onContributionRecorded={onContributionRecorded}>
-          <Button className="flex-1 sm:flex-initial bg-purple-600 hover:bg-purple-700">
-            <Plus className="w-4 h-4 mr-2" />
-            Record Contribution
-          </Button>
-        </RecordContributionDialog>
+        <RecordContributionDialog onContributionRecorded={onContributionRecorded} />
       </div>
     </div>
   );
