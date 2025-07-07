@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
-import { Search, Phone, Mail, MoreVertical } from 'lucide-react';
+import { Search, Phone, Mail } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
 import AddMemberDialog from '@/components/members/AddMemberDialog';
+import MemberContextMenu from '@/components/members/MemberContextMenu';
 import { useMembers } from '@/hooks/useMembers';
 import { useMemberContributions } from '@/hooks/useMemberContributions';
 
@@ -14,7 +14,7 @@ const Members = () => {
   const { members, loading: membersLoading, refetch: refetchMembers } = useMembers();
   const { memberContributions, loading: contributionsLoading, refetch: refetchContributions } = useMemberContributions();
 
-  const handleMemberAdded = () => {
+  const handleMemberUpdated = () => {
     refetchMembers();
     refetchContributions();
   };
@@ -44,7 +44,7 @@ const Members = () => {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold text-gray-900">Members Management</h2>
-          <AddMemberDialog onMemberAdded={handleMemberAdded} />
+          <AddMemberDialog onMemberAdded={handleMemberUpdated} />
         </div>
         <div className="flex items-center justify-center h-64">
           <p className="text-gray-500">Loading members...</p>
@@ -57,7 +57,7 @@ const Members = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Members Management</h2>
-        <AddMemberDialog onMemberAdded={handleMemberAdded} />
+        <AddMemberDialog onMemberAdded={handleMemberUpdated} />
       </div>
 
       <Card>
@@ -126,9 +126,7 @@ const Members = () => {
                       </span>
                       <p className="text-xs text-gray-500 mt-1">Since {new Date(member.join_date).toLocaleDateString()}</p>
                     </div>
-                    <Button variant="ghost" size="sm">
-                      <MoreVertical className="w-4 h-4" />
-                    </Button>
+                    <MemberContextMenu member={member} onMemberUpdated={handleMemberUpdated} />
                   </div>
                 </div>
               ))}
