@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { DollarSign, Users, TrendingUp, Calendar, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,8 +11,12 @@ import RecordRepaymentDialog from '@/components/dashboard/RecordRepaymentDialog'
 import InterestProfitCard from '@/components/dashboard/InterestProfitCard';
 import InterestProfitDialog from '@/components/dashboard/InterestProfitDialog';
 import InterestProfitStats from '@/components/dashboard/InterestProfitStats';
+import OverduePaymentsAlert from '@/components/dashboard/OverduePaymentsAlert';
+import OverduePaymentsReport from '@/components/dashboard/OverduePaymentsReport';
 
 const Dashboard = () => {
+  const [showOverdueReport, setShowOverdueReport] = useState(false);
+  
   const { stats, loading, refetch } = useDashboardData();
   const { nextMeeting, loading: meetingLoading } = useNextMeeting();
   const { currentTarget, loading: targetLoading } = useMonthlyTargets();
@@ -131,6 +134,9 @@ const Dashboard = () => {
         <p className="text-purple-100">Here's what's happening with your chama today.</p>
       </div>
 
+      {/* Overdue Payments Alert */}
+      <OverduePaymentsAlert onViewDetails={() => setShowOverdueReport(true)} />
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {dashboardStats.map((stat, index) => {
@@ -228,6 +234,12 @@ const Dashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Overdue Payments Report Dialog */}
+      <OverduePaymentsReport 
+        open={showOverdueReport} 
+        onOpenChange={setShowOverdueReport} 
+      />
     </div>
   );
 };

@@ -553,6 +553,19 @@ export type Database = {
         Args: { member_uuid: string }
         Returns: number
       }
+      get_members_missing_monthly_contributions: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          member_id: string
+          member_name: string
+          member_phone: string
+          member_email: string
+          last_contribution_date: string
+          last_contribution_amount: number
+          days_since_last_contribution: number
+          total_contributions: number
+        }[]
+      }
       get_monthly_contributions_total: {
         Args: { target_month: string }
         Returns: number
@@ -570,6 +583,33 @@ export type Database = {
           meeting_time: string
           location: string
           days_until: number
+        }[]
+      }
+      get_overdue_loans: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          loan_id: string
+          member_id: string
+          member_name: string
+          member_phone: string
+          loan_amount: number
+          total_amount_due: number
+          amount_repaid: number
+          balance_due: number
+          due_date: string
+          days_overdue: number
+          interest_rate: number
+        }[]
+      }
+      get_overdue_payments_summary: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          overdue_loans_count: number
+          overdue_loans_total_amount: number
+          members_missing_contributions_count: number
+          total_expected_monthly_target: number
+          current_month_collected: number
+          collection_percentage: number
         }[]
       }
       get_past_meetings: {
@@ -630,6 +670,10 @@ export type Database = {
       }
       set_monthly_target: {
         Args: { target_month: string; target_amount: number }
+        Returns: undefined
+      }
+      update_overdue_loan_status: {
+        Args: Record<PropertyKey, never>
         Returns: undefined
       }
     }
