@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface Member {
   id: string;
@@ -18,8 +19,11 @@ export const useMembers = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const fetchMembers = async () => {
+    if (!user) return;
+
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -43,8 +47,10 @@ export const useMembers = () => {
   };
 
   useEffect(() => {
-    fetchMembers();
-  }, []);
+    if (user) {
+      fetchMembers();
+    }
+  }, [user]);
 
   return {
     members,

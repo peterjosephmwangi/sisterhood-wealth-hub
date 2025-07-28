@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface AuditLogEntry {
   id: string;
@@ -18,8 +19,11 @@ export const useAuditTrail = () => {
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const fetchAuditTrail = async (limit: number = 50, offset: number = 0) => {
+    if (!user) return;
+
     try {
       setLoading(true);
       const { data, error } = await supabase.rpc('get_audit_trail', {
@@ -57,6 +61,8 @@ export const useAuditTrail = () => {
     oldValues?: any,
     newValues?: any
   ) => {
+    if (!user) return;
+
     try {
       const { error } = await supabase.rpc('log_activity', {
         p_action: action,
@@ -75,8 +81,10 @@ export const useAuditTrail = () => {
   };
 
   useEffect(() => {
-    fetchAuditTrail();
-  }, []);
+    if (user) {
+      fetchAuditTrail();
+    }
+  }, [user]);
 
   return {
     auditLogs,

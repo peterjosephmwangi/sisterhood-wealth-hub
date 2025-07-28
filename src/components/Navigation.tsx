@@ -1,61 +1,61 @@
-import React from 'react';
-import { Users, DollarSign, Calendar, TrendingUp, Menu, Bell, PieChart, FileText } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
-const Navigation = ({ activeTab, setActiveTab }: { activeTab: string; setActiveTab: (tab: string) => void }) => {
+import React from 'react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Heart, BarChart3, Users, CreditCard, Calendar, TrendingUp, FileText } from 'lucide-react';
+import UserProfile from '@/components/UserProfile';
+
+interface NavigationProps {
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+}
+
+const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab }) => {
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: TrendingUp },
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
     { id: 'members', label: 'Members', icon: Users },
-    { id: 'contributions', label: 'Contributions', icon: DollarSign },
+    { id: 'contributions', label: 'Contributions', icon: CreditCard },
     { id: 'meetings', label: 'Meetings', icon: Calendar },
-    { id: 'dividends', label: 'Dividends', icon: PieChart },
+    { id: 'dividends', label: 'Dividends', icon: TrendingUp },
     { id: 'audit', label: 'Audit Trail', icon: FileText },
   ];
 
   return (
-    <div className="bg-white shadow-sm border-b">
+    <nav className="bg-white shadow-sm border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-8">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-green-600 rounded-lg flex items-center justify-center">
-                <Users className="w-5 h-5 text-white" />
-              </div>
-              <h1 className="text-xl font-bold text-gray-900">Women's Chama</h1>
+              <Heart className="h-8 w-8 text-pink-500" />
+              <span className="text-xl font-bold text-gray-900">Sisterhood Wealth Hub</span>
             </div>
-          </div>
-          
-          <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    activeTab === item.id
-                      ? 'text-purple-600 bg-purple-50'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
+            
+            <div className="hidden md:flex space-x-1">
+              {navItems.map(({ id, label, icon: Icon }) => (
+                <Button
+                  key={id}
+                  variant={activeTab === id ? 'default' : 'ghost'}
+                  onClick={() => setActiveTab(id)}
+                  className={cn(
+                    'flex items-center space-x-2 px-3 py-2',
+                    activeTab === id 
+                      ? 'bg-pink-100 text-pink-700 hover:bg-pink-200' 
+                      : 'text-gray-600 hover:text-gray-900'
+                  )}
                 >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
+                  <Icon className="h-4 w-4" />
+                  <span>{label}</span>
+                </Button>
+              ))}
+            </div>
           </div>
 
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm">
-              <Bell className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="sm" className="md:hidden">
-              <Menu className="w-4 h-4" />
-            </Button>
+            <UserProfile />
           </div>
         </div>
       </div>
-    </div>
+    </nav>
   );
 };
 
