@@ -1,9 +1,18 @@
 
 import React from 'react';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Heart, BarChart3, Users, CreditCard, Calendar, TrendingUp, FileText } from 'lucide-react';
-import UserProfile from '@/components/UserProfile';
+import { useAuth } from '@/contexts/AuthContext';
+import { UserProfile } from './UserProfile';
+import { 
+  LayoutDashboard, 
+  Users, 
+  PiggyBank, 
+  Calendar, 
+  TrendingUp, 
+  Calculator,
+  FileText,
+  LogOut 
+} from 'lucide-react';
 
 interface NavigationProps {
   activeTab: string;
@@ -11,47 +20,57 @@ interface NavigationProps {
 }
 
 const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab }) => {
+  const { signOut } = useAuth();
+
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'members', label: 'Members', icon: Users },
-    { id: 'contributions', label: 'Contributions', icon: CreditCard },
+    { id: 'contributions', label: 'Contributions', icon: PiggyBank },
     { id: 'meetings', label: 'Meetings', icon: Calendar },
     { id: 'dividends', label: 'Dividends', icon: TrendingUp },
+    { id: 'financial', label: 'Financial', icon: Calculator },
     { id: 'audit', label: 'Audit Trail', icon: FileText },
   ];
 
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
   return (
-    <nav className="bg-white shadow-sm border-b border-gray-200">
+    <nav className="bg-white border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between h-16">
           <div className="flex items-center space-x-8">
-            <div className="flex items-center space-x-2">
-              <Heart className="h-8 w-8 text-pink-500" />
-              <span className="text-xl font-bold text-gray-900">Sisterhood Wealth Hub</span>
+            <div className="flex-shrink-0">
+              <h1 className="text-xl font-bold text-gray-900">Chama Admin</h1>
             </div>
-            
             <div className="hidden md:flex space-x-1">
-              {navItems.map(({ id, label, icon: Icon }) => (
-                <Button
-                  key={id}
-                  variant={activeTab === id ? 'default' : 'ghost'}
-                  onClick={() => setActiveTab(id)}
-                  className={cn(
-                    'flex items-center space-x-2 px-3 py-2',
-                    activeTab === id 
-                      ? 'bg-pink-100 text-pink-700 hover:bg-pink-200' 
-                      : 'text-gray-600 hover:text-gray-900'
-                  )}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span>{label}</span>
-                </Button>
-              ))}
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Button
+                    key={item.id}
+                    variant={activeTab === item.id ? "default" : "ghost"}
+                    onClick={() => setActiveTab(item.id)}
+                    className="flex items-center space-x-2"
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span>{item.label}</span>
+                  </Button>
+                );
+              })}
             </div>
           </div>
-
           <div className="flex items-center space-x-4">
             <UserProfile />
+            <Button 
+              variant="outline" 
+              onClick={handleSignOut}
+              className="flex items-center space-x-2"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Sign Out</span>
+            </Button>
           </div>
         </div>
       </div>

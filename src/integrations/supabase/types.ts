@@ -53,6 +53,56 @@ export type Database = {
         }
         Relationships: []
       }
+      budgets: {
+        Row: {
+          allocated_amount: number
+          budget_period_end: string
+          budget_period_start: string
+          category_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          remaining_amount: number
+          spent_amount: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          allocated_amount: number
+          budget_period_end: string
+          budget_period_start: string
+          category_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          remaining_amount?: number
+          spent_amount?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          allocated_amount?: number
+          budget_period_end?: string
+          budget_period_start?: string
+          category_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          remaining_amount?: number
+          spent_amount?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budgets_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "expense_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contribution_targets: {
         Row: {
           created_at: string
@@ -160,6 +210,131 @@ export type Database = {
           status?: string
           total_dividend_amount?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      expense_categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      expenses: {
+        Row: {
+          amount: number
+          approved_by: string | null
+          category_id: string
+          created_at: string
+          description: string
+          expense_date: string
+          id: string
+          notes: string | null
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          receipt_reference: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          approved_by?: string | null
+          category_id: string
+          created_at?: string
+          description: string
+          expense_date?: string
+          id?: string
+          notes?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          receipt_reference?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          approved_by?: string | null
+          category_id?: string
+          created_at?: string
+          description?: string
+          expense_date?: string
+          id?: string
+          notes?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          receipt_reference?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "expense_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_reports: {
+        Row: {
+          generated_at: string
+          generated_by: string | null
+          id: string
+          net_profit: number
+          report_data: Json | null
+          report_period_end: string
+          report_period_start: string
+          report_type: string
+          status: string
+          total_expenses: number
+          total_income: number
+        }
+        Insert: {
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+          net_profit?: number
+          report_data?: Json | null
+          report_period_end: string
+          report_period_start: string
+          report_type: string
+          status?: string
+          total_expenses?: number
+          total_income?: number
+        }
+        Update: {
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+          net_profit?: number
+          report_data?: Json | null
+          report_period_end?: string
+          report_period_start?: string
+          report_type?: string
+          status?: string
+          total_expenses?: number
+          total_income?: number
         }
         Relationships: []
       }
@@ -505,6 +680,17 @@ export type Database = {
           dividend_amount: number
         }[]
       }
+      generate_profit_loss_report: {
+        Args: { start_date: string; end_date: string }
+        Returns: {
+          total_contributions: number
+          total_interest_income: number
+          total_income: number
+          total_expenses: number
+          net_profit: number
+          profit_margin: number
+        }[]
+      }
       get_active_members_count: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -525,6 +711,26 @@ export type Database = {
       get_available_loan_fund: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      get_budget_utilization: {
+        Args: { budget_period_start: string; budget_period_end: string }
+        Returns: {
+          category_id: string
+          category_name: string
+          allocated_amount: number
+          spent_amount: number
+          remaining_amount: number
+          utilization_percentage: number
+        }[]
+      }
+      get_expenses_by_category: {
+        Args: { start_date?: string; end_date?: string }
+        Returns: {
+          category_id: string
+          category_name: string
+          total_amount: number
+          expense_count: number
+        }[]
       }
       get_loan_balance: {
         Args: { loan_uuid: string }
@@ -668,6 +874,10 @@ export type Database = {
       }
       get_total_contributions: {
         Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      get_total_expenses: {
+        Args: { start_date?: string; end_date?: string }
         Returns: number
       }
       get_total_interest_profit: {
