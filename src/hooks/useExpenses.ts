@@ -17,7 +17,7 @@ export interface Expense {
   amount: number;
   description: string;
   expense_date: string;
-  payment_method: 'cash' | 'm_pesa' | 'bank_transfer' | 'cheque';
+  payment_method: 'cash' | 'm_pesa' | 'bank_transfer';
   receipt_reference?: string;
   approved_by?: string;
   status: 'pending' | 'approved' | 'rejected';
@@ -64,7 +64,14 @@ export const useExpenses = () => {
         .order('expense_date', { ascending: false });
 
       if (error) throw error;
-      setExpenses(data || []);
+      
+      // Type assertion to handle the status field type mismatch
+      const typedData = (data || []).map(expense => ({
+        ...expense,
+        status: expense.status as 'pending' | 'approved' | 'rejected'
+      })) as Expense[];
+      
+      setExpenses(typedData);
     } catch (error) {
       console.error('Error fetching expenses:', error);
       toast({
