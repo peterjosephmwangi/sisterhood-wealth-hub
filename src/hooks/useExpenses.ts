@@ -17,7 +17,7 @@ export interface Expense {
   amount: number;
   description: string;
   expense_date: string;
-  payment_method: 'cash' | 'mpesa' | 'bank_transfer' | 'cheque';
+  payment_method: 'cash' | 'm_pesa' | 'bank_transfer' | 'cheque';
   receipt_reference?: string;
   approved_by?: string;
   status: 'pending' | 'approved' | 'rejected';
@@ -81,7 +81,7 @@ export const useExpenses = () => {
     try {
       const { data, error } = await supabase
         .from('expenses')
-        .insert([expenseData])
+        .insert(expenseData)
         .select()
         .single();
 
