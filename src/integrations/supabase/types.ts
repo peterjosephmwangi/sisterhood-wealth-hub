@@ -514,6 +514,56 @@ export type Database = {
         }
         Relationships: []
       }
+      member_communication_preferences: {
+        Row: {
+          contribution_reminders: boolean
+          created_at: string
+          dividend_notifications: boolean
+          email_enabled: boolean
+          general_notifications: boolean
+          id: string
+          loan_reminders: boolean
+          meeting_reminders: boolean
+          member_id: string
+          sms_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          contribution_reminders?: boolean
+          created_at?: string
+          dividend_notifications?: boolean
+          email_enabled?: boolean
+          general_notifications?: boolean
+          id?: string
+          loan_reminders?: boolean
+          meeting_reminders?: boolean
+          member_id: string
+          sms_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          contribution_reminders?: boolean
+          created_at?: string
+          dividend_notifications?: boolean
+          email_enabled?: boolean
+          general_notifications?: boolean
+          id?: string
+          loan_reminders?: boolean
+          meeting_reminders?: boolean
+          member_id?: string
+          sms_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_communication_preferences_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: true
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       member_dividends: {
         Row: {
           contribution_percentage: number
@@ -603,6 +653,170 @@ export type Database = {
           name?: string
           phone?: string
           status?: Database["public"]["Enums"]["member_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notification_campaigns: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          failed_sends: number | null
+          id: string
+          name: string
+          scheduled_at: string | null
+          started_at: string | null
+          status: string
+          successful_sends: number | null
+          target_criteria: Json | null
+          template_id: string | null
+          total_recipients: number | null
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          failed_sends?: number | null
+          id?: string
+          name: string
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string
+          successful_sends?: number | null
+          target_criteria?: Json | null
+          template_id?: string | null
+          total_recipients?: number | null
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          failed_sends?: number | null
+          id?: string
+          name?: string
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string
+          successful_sends?: number | null
+          target_criteria?: Json | null
+          template_id?: string | null
+          total_recipients?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_campaigns_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "notification_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_history: {
+        Row: {
+          content: string
+          created_at: string
+          delivered_at: string | null
+          error_message: string | null
+          id: string
+          member_id: string | null
+          metadata: Json | null
+          recipient: string
+          sent_at: string | null
+          status: string
+          subject: string | null
+          template_id: string | null
+          type: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          member_id?: string | null
+          metadata?: Json | null
+          recipient: string
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          template_id?: string | null
+          type: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          member_id?: string | null
+          metadata?: Json | null
+          recipient?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          template_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_history_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_history_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "notification_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_templates: {
+        Row: {
+          category: string
+          created_at: string
+          email_content: string | null
+          id: string
+          is_active: boolean
+          name: string
+          sms_content: string | null
+          subject: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          email_content?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          sms_content?: string | null
+          subject?: string | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          email_content?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          sms_content?: string | null
+          subject?: string | null
+          type?: string
           updated_at?: string
         }
         Relationships: []
@@ -754,6 +968,18 @@ export type Database = {
           status: string
         }[]
       }
+      get_member_communication_preferences: {
+        Args: { member_uuid: string }
+        Returns: {
+          sms_enabled: boolean
+          email_enabled: boolean
+          contribution_reminders: boolean
+          meeting_reminders: boolean
+          loan_reminders: boolean
+          dividend_notifications: boolean
+          general_notifications: boolean
+        }[]
+      }
       get_member_dividend_history: {
         Args: { member_uuid: string }
         Returns: {
@@ -819,6 +1045,17 @@ export type Database = {
           meeting_time: string
           location: string
           days_until: number
+        }[]
+      }
+      get_notification_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          total_sent: number
+          total_delivered: number
+          total_failed: number
+          sms_sent: number
+          email_sent: number
+          recent_activity_count: number
         }[]
       }
       get_overdue_loans: {
