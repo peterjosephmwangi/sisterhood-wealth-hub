@@ -7,6 +7,7 @@ import Contributions from '@/components/Contributions';
 import Meetings from '@/components/Meetings';
 import Dividends from '@/components/Dividends';
 import Financial from '@/components/Financial';
+import NotificationSystem from '@/components/NotificationSystem';
 import AuditTrail from '@/components/audit/AuditTrail';
 
 const Index = () => {
@@ -26,6 +27,8 @@ const Index = () => {
         return <Dividends />;
       case 'financial':
         return <Financial />;
+      case 'notifications':
+        return <NotificationSystem />;
       case 'audit':
         return <AuditTrail />;
       default:

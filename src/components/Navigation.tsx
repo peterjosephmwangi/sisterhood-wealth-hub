@@ -11,6 +11,7 @@ import {
   TrendingUp, 
   Calculator,
   FileText,
+  Bell,
   LogOut 
 } from 'lucide-react';
 
@@ -29,6 +30,7 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab }) => {
     { id: 'meetings', label: 'Meetings', icon: Calendar },
     { id: 'dividends', label: 'Dividends', icon: TrendingUp },
     { id: 'financial', label: 'Financial', icon: Calculator },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'audit', label: 'Audit Trail', icon: FileText },
   ];
 
