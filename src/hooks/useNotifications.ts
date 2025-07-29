@@ -149,7 +149,21 @@ export const useNotificationStats = () => {
         .rpc('get_notification_stats');
 
       if (error) throw error;
-      return data as NotificationStats;
+      
+      // Handle the case where RPC returns an array with a single stats object
+      if (Array.isArray(data) && data.length > 0) {
+        return data[0] as NotificationStats;
+      }
+      
+      // Return default stats if no data
+      return {
+        total_sent: 0,
+        total_delivered: 0,
+        total_failed: 0,
+        sms_sent: 0,
+        email_sent: 0,
+        recent_activity_count: 0,
+      } as NotificationStats;
     },
   });
 };
