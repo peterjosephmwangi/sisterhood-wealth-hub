@@ -9,6 +9,7 @@ import Dividends from '@/components/Dividends';
 import Financial from '@/components/Financial';
 import NotificationSystem from '@/components/NotificationSystem';
 import AuditTrail from '@/components/audit/AuditTrail';
+import AdminDashboard from '@/components/admin/AdminDashboard';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -31,6 +32,8 @@ const Index = () => {
         return <NotificationSystem />;
       case 'audit':
         return <AuditTrail />;
+      case 'admin':
+        return <AdminDashboard />;
       default:
         return <Dashboard />;
     }

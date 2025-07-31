@@ -828,7 +828,6 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
-          role: string
           updated_at: string | null
         }
         Insert: {
@@ -837,7 +836,6 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
-          role?: string
           updated_at?: string | null
         }
         Update: {
@@ -846,8 +844,31 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
-          role?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -936,6 +957,10 @@ export type Database = {
           remaining_amount: number
           utilization_percentage: number
         }[]
+      }
+      get_current_user_roles: {
+        Args: Record<PropertyKey, never>
+        Returns: Database["public"]["Enums"]["app_role"][]
       }
       get_expenses_by_category: {
         Args: { start_date?: string; end_date?: string }
@@ -1135,6 +1160,20 @@ export type Database = {
           created_at: string
         }[]
       }
+      has_any_role: {
+        Args: {
+          _user_id: string
+          _roles: Database["public"]["Enums"]["app_role"][]
+        }
+        Returns: boolean
+      }
+      has_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
       log_activity: {
         Args: {
           p_action: string
@@ -1155,6 +1194,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_role: "admin" | "treasurer" | "secretary" | "member" | "chairperson"
       contribution_status: "confirmed" | "pending" | "failed"
       meeting_status: "scheduled" | "completed" | "cancelled"
       member_status: "active" | "inactive" | "suspended"
@@ -1286,6 +1326,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "treasurer", "secretary", "member", "chairperson"],
       contribution_status: ["confirmed", "pending", "failed"],
       meeting_status: ["scheduled", "completed", "cancelled"],
       member_status: ["active", "inactive", "suspended"],

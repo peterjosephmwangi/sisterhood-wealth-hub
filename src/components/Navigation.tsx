@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserRoles } from '@/hooks/useUserRoles';
 import UserProfile from './UserProfile';
 import { 
   LayoutDashboard, 
@@ -12,6 +13,7 @@ import {
   Calculator,
   FileText,
   Bell,
+  Settings,
   LogOut 
 } from 'lucide-react';
 
@@ -22,21 +24,25 @@ interface NavigationProps {
 
 const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab }) => {
   const { signOut } = useAuth();
+  const { canManageUsers, canManageFinances, canViewReports, isAdmin } = useUserRoles();
 
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'members', label: 'Members', icon: Users },
-    { id: 'contributions', label: 'Contributions', icon: PiggyBank },
-    { id: 'meetings', label: 'Meetings', icon: Calendar },
-    { id: 'dividends', label: 'Dividends', icon: TrendingUp },
-    { id: 'financial', label: 'Financial', icon: Calculator },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'audit', label: 'Audit Trail', icon: FileText },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, show: true },
+    { id: 'members', label: 'Members', icon: Users, show: true },
+    { id: 'contributions', label: 'Contributions', icon: PiggyBank, show: true },
+    { id: 'meetings', label: 'Meetings', icon: Calendar, show: true },
+    { id: 'dividends', label: 'Dividends', icon: TrendingUp, show: canViewReports() },
+    { id: 'financial', label: 'Financial', icon: Calculator, show: canManageFinances() },
+    { id: 'notifications', label: 'Notifications', icon: Bell, show: true },
+    { id: 'audit', label: 'Audit Trail', icon: FileText, show: canViewReports() },
+    { id: 'admin', label: 'Administration', icon: Settings, show: isAdmin() },
   ];
 
   const handleSignOut = async () => {
     await signOut();
   };
+
+  const visibleNavItems = navItems.filter(item => item.show);
 
   return (
     <nav className="bg-white border-b border-gray-200">
@@ -47,7 +53,7 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab }) => {
               <h1 className="text-xl font-bold text-gray-900">Chama Admin</h1>
             </div>
             <div className="hidden md:flex space-x-1">
-              {navItems.map((item) => {
+              {visibleNavItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <Button
