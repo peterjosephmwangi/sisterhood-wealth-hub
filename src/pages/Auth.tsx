@@ -7,13 +7,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Heart } from 'lucide-react';
+import { Heart } from 'lucide-react';
+import ForgotPasswordDialog from '@/components/auth/ForgotPasswordDialog';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
 
@@ -99,6 +101,15 @@ const Auth = () => {
                 >
                   {isLoading ? 'Signing in...' : 'Sign In'}
                 </Button>
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPassword(true)}
+                    className="text-sm text-pink-600 hover:text-pink-800 underline"
+                  >
+                    Forgot your password?
+                  </button>
+                </div>
               </form>
             </TabsContent>
             
@@ -149,6 +160,11 @@ const Auth = () => {
           </Tabs>
         </CardContent>
       </Card>
+
+      <ForgotPasswordDialog
+        open={showForgotPassword}
+        onOpenChange={setShowForgotPassword}
+      />
     </div>
   );
 };
