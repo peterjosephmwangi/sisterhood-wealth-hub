@@ -1,37 +1,45 @@
 
 import React, { useState } from 'react';
-import { Search, Phone, Mail } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import AddMemberDialog from '@/components/members/AddMemberDialog';
-import MemberContextMenu from '@/components/members/MemberContextMenu';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { 
+  Users, 
+  Search, 
+  Filter, 
+  MoreVertical, 
+  Phone, 
+  Mail,
+  UserPlus,
+  UserCheck
+} from 'lucide-react';
 import { useMembers } from '@/hooks/useMembers';
-import { useMemberContributions } from '@/hooks/useMemberContributions';
+import AddMemberDialog from './members/AddMemberDialog';
+import InviteMemberDialog from './members/InviteMemberDialog';
+import MemberInvitations from './members/MemberInvitations';
+import EditMemberDialog from './members/EditMemberDialog';
+import DeleteMemberDialog from './members/DeleteMemberDialog';
+import SuspendMemberDialog from './members/SuspendMemberDialog';
+import MemberContextMenu from './members/MemberContextMenu';
+import { format } from 'date-fns';
 
 const Members = () => {
+  const { members, loading, fetchMembers } = useMembers();
   const [searchTerm, setSearchTerm] = useState('');
-  const { members, loading: membersLoading, refetch: refetchMembers } = useMembers();
-  const { memberContributions, loading: contributionsLoading, refetch: refetchContributions } = useMemberContributions();
-
-  const handleMemberUpdated = () => {
-    refetchMembers();
-    refetchContributions();
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-KE', {
-      style: 'currency',
-      currency: 'KES',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  const getMemberContributions = (memberId: string) => {
-    const total = memberContributions[memberId] || 0;
-    return formatCurrency(total);
-  };
+  const [selectedMember, setSelectedMember] = useState<any>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
 
   const filteredMembers = members.filter(member =>
     member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -39,101 +47,189 @@ const Members = () => {
     (member.email && member.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  if (membersLoading || contributionsLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-900">Members Management</h2>
-          <AddMemberDialog onMemberAdded={handleMemberUpdated} />
-        </div>
-        <div className="flex items-center justify-center h-64">
-          <p className="text-gray-500">Loading members...</p>
-        </div>
-      </div>
-    );
-  }
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'active':
+        return <Badge className="bg-green-100 text-green-800">Active</Badge>;
+      case 'suspended':
+        return <Badge variant="destructive">Suspended</Badge>;
+      case 'inactive':
+        return <Badge variant="outline">Inactive</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const handleMemberAction = (member: any, action: string) => {
+    setSelectedMember(member);
+    switch (action) {
+      case 'edit':
+        setEditDialogOpen(true);
+        break;
+      case 'delete':
+        setDeleteDialogOpen(true);
+        break;
+      case 'suspend':
+        setSuspendDialogOpen(true);
+        break;
+    }
+  };
+
+  const handleDialogClose = () => {
+    setSelectedMember(null);
+    setEditDialogOpen(false);
+    setDeleteDialogOpen(false);
+    setSuspendDialogOpen(false);
+    fetchMembers();
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Members Management</h2>
-        <AddMemberDialog onMemberAdded={handleMemberUpdated} />
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Members</h1>
+          <p className="text-gray-600 mt-1">Manage your chama group members</p>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>All Members ({members.length})</CardTitle>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                placeholder="Search members..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 w-64"
-              />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {filteredMembers.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500">
-                {members.length === 0 ? 'No members found. Add your first member!' : 'No members match your search.'}
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {filteredMembers.map((member) => (
-                <div key={member.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center space-x-4">
-                    <Avatar className="w-12 h-12">
-                      <AvatarFallback className="bg-purple-100 text-purple-600 font-semibold">
-                        {member.name.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{member.name}</h3>
-                      <div className="flex items-center space-x-4 text-sm text-gray-600">
-                        <div className="flex items-center">
-                          <Phone className="w-3 h-3 mr-1" />
-                          {member.phone}
-                        </div>
-                        {member.email && (
-                          <div className="flex items-center">
-                            <Mail className="w-3 h-3 mr-1" />
-                            {member.email}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-6">
-                    <div className="text-right">
-                      <p className="font-semibold text-green-600">{getMemberContributions(member.id)}</p>
-                      <p className="text-xs text-gray-500">Total Contributions</p>
-                    </div>
-                    <div className="text-right">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        member.status === 'active' 
-                          ? 'bg-green-100 text-green-800'
-                          : member.status === 'inactive'
-                          ? 'bg-gray-100 text-gray-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
-                      </span>
-                      <p className="text-xs text-gray-500 mt-1">Since {new Date(member.join_date).toLocaleDateString()}</p>
-                    </div>
-                    <MemberContextMenu member={member} onMemberUpdated={handleMemberUpdated} />
+      <Tabs defaultValue="active-members" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsTrigger value="active-members" className="flex items-center gap-2">
+            <UserCheck className="w-4 h-4" />
+            Active Members
+          </TabsTrigger>
+          <TabsTrigger value="invitations" className="flex items-center gap-2">
+            <UserPlus className="w-4 h-4" />
+            Invitations
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="active-members" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    Members Directory
+                  </CardTitle>
+                  <CardDescription>
+                    {loading ? 'Loading...' : `${filteredMembers.length} members found`}
+                  </CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <AddMemberDialog onMemberAdded={fetchMembers} />
+                  <InviteMemberDialog />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-4 mb-6">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search by name, phone, or email..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Button variant="outline" size="icon">
+                  <Filter className="w-4 h-4" />
+                </Button>
+              </div>
+
+              {loading ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading members...</p>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              ) : filteredMembers.length === 0 ? (
+                <div className="text-center py-12">
+                  <Users className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No members found</h3>
+                  <p className="text-gray-600 mb-4">
+                    {searchTerm ? 'Try adjusting your search terms.' : 'Start by adding your first member.'}
+                  </p>
+                  {!searchTerm && <AddMemberDialog onMemberAdded={fetchMembers} />}
+                </div>
+              ) : (
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Contact</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Join Date</TableHead>
+                        <TableHead className="w-[50px]"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredMembers.map((member) => (
+                        <TableRow key={member.id}>
+                          <TableCell className="font-medium">{member.name}</TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-1 text-sm">
+                                <Phone className="w-3 h-3 text-gray-400" />
+                                {member.phone}
+                              </div>
+                              {member.email && (
+                                <div className="flex items-center gap-1 text-sm text-gray-600">
+                                  <Mail className="w-3 h-3 text-gray-400" />
+                                  {member.email}
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>{getStatusBadge(member.status)}</TableCell>
+                          <TableCell>{format(new Date(member.join_date), 'MMM d, yyyy')}</TableCell>
+                          <TableCell>
+                            <MemberContextMenu 
+                              member={member} 
+                              onAction={handleMemberAction}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="invitations">
+          <MemberInvitations />
+        </TabsContent>
+      </Tabs>
+
+      {selectedMember && (
+        <>
+          <EditMemberDialog
+            member={selectedMember}
+            open={editDialogOpen}
+            onOpenChange={setEditDialogOpen}
+            onSuccess={handleDialogClose}
+          />
+          <DeleteMemberDialog
+            member={selectedMember}
+            open={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+            onSuccess={handleDialogClose}
+          />
+          <SuspendMemberDialog
+            member={selectedMember}
+            open={suspendDialogOpen}
+            onOpenChange={setSuspendDialogOpen}
+            onSuccess={handleDialogClose}
+          />
+        </>
+      )}
     </div>
   );
 };

@@ -624,6 +624,42 @@ export type Database = {
           },
         ]
       }
+      member_invitations: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invitation_token: string
+          invited_by: string
+          member_data: Json
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invitation_token?: string
+          invited_by: string
+          member_data: Json
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invitation_token?: string
+          invited_by?: string
+          member_data?: Json
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       members: {
         Row: {
           created_at: string
@@ -900,6 +936,10 @@ export type Database = {
       }
     }
     Functions: {
+      accept_member_invitation: {
+        Args: { invitation_token: string; user_password: string }
+        Returns: Json
+      }
       calculate_member_dividends: {
         Args: {
           declaration_id: string
@@ -914,6 +954,10 @@ export type Database = {
           contribution_percentage: number
           dividend_amount: number
         }[]
+      }
+      expire_old_invitations: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       generate_profit_loss_report: {
         Args: { start_date: string; end_date: string }
