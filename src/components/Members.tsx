@@ -191,6 +191,7 @@ const Members = () => {
                             <MemberContextMenu 
                               member={member} 
                               onAction={handleMemberAction}
+                              onMemberUpdated={fetchMembers}
                             />
                           </TableCell>
                         </TableRow>
@@ -214,19 +215,19 @@ const Members = () => {
             member={selectedMember}
             open={editDialogOpen}
             onOpenChange={setEditDialogOpen}
-            onSuccess={handleDialogClose}
+            onMemberUpdated={handleDialogClose}
           />
           <DeleteMemberDialog
             member={selectedMember}
             open={deleteDialogOpen}
             onOpenChange={setDeleteDialogOpen}
-            onSuccess={handleDialogClose}
+            onMemberUpdated={handleDialogClose}
           />
           <SuspendMemberDialog
             member={selectedMember}
             open={suspendDialogOpen}
             onOpenChange={setSuspendDialogOpen}
-            onSuccess={handleDialogClose}
+            onMemberUpdated={handleDialogClose}
           />
         </>
       )}

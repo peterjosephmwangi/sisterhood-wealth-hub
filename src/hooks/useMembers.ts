@@ -56,5 +56,6 @@ export const useMembers = () => {
     members,
     loading,
     refetch: fetchMembers,
+    fetchMembers, // Alias for backward compatibility
   };
 };

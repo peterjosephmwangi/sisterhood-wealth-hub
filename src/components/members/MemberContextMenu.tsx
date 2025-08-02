@@ -19,10 +19,11 @@ import DeleteMemberDialog from './DeleteMemberDialog';
 
 interface MemberContextMenuProps {
   member: Member;
-  onMemberUpdated: () => void;
+  onAction?: (member: any, action: string) => void;
+  onMemberUpdated?: () => void;
 }
 
-const MemberContextMenu = ({ member, onMemberUpdated }: MemberContextMenuProps) => {
+const MemberContextMenu = ({ member, onAction, onMemberUpdated }: MemberContextMenuProps) => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -54,7 +55,8 @@ const MemberContextMenu = ({ member, onMemberUpdated }: MemberContextMenuProps) 
         description: "Member has been reactivated",
       });
 
-      onMemberUpdated();
+      if (onMemberUpdated) onMemberUpdated();
+      if (onAction) onAction(member, 'reactivate');
     } catch (error) {
       console.error('Error reactivating member:', error);
       toast({
@@ -62,6 +64,29 @@ const MemberContextMenu = ({ member, onMemberUpdated }: MemberContextMenuProps) 
         description: "Failed to reactivate member",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleDialogSuccess = () => {
+    if (onMemberUpdated) onMemberUpdated();
+  };
+
+  const handleAction = (action: string) => {
+    if (onAction) {
+      onAction(member, action);
+    } else {
+      // Fallback to local dialog management
+      switch (action) {
+        case 'edit':
+          setEditDialogOpen(true);
+          break;
+        case 'suspend':
+          setSuspendDialogOpen(true);
+          break;
+        case 'delete':
+          setDeleteDialogOpen(true);
+          break;
+      }
     }
   };
 
@@ -74,13 +99,13 @@ const MemberContextMenu = ({ member, onMemberUpdated }: MemberContextMenuProps) 
           </Button>
         </ContextMenuTrigger>
         <ContextMenuContent className="w-48">
-          <ContextMenuItem onClick={() => setEditDialogOpen(true)}>
+          <ContextMenuItem onClick={() => handleAction('edit')}>
             <Edit className="w-4 h-4 mr-2" />
             Edit Member
           </ContextMenuItem>
           <ContextMenuSeparator />
           {member.status === 'active' ? (
-            <ContextMenuItem onClick={() => setSuspendDialogOpen(true)}>
+            <ContextMenuItem onClick={() => handleAction('suspend')}>
               <UserX className="w-4 h-4 mr-2" />
               Suspend Member
             </ContextMenuItem>
@@ -92,7 +117,7 @@ const MemberContextMenu = ({ member, onMemberUpdated }: MemberContextMenuProps) 
           ) : null}
           <ContextMenuSeparator />
           <ContextMenuItem 
-            onClick={() => setDeleteDialogOpen(true)}
+            onClick={() => handleAction('delete')}
             className="text-red-600 focus:text-red-600 focus:bg-red-50"
           >
             <Trash2 className="w-4 h-4 mr-2" />
@@ -105,21 +130,21 @@ const MemberContextMenu = ({ member, onMemberUpdated }: MemberContextMenuProps) 
         member={member}
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
-        onMemberUpdated={onMemberUpdated}
+        onMemberUpdated={handleDialogSuccess}
       />
 
       <SuspendMemberDialog 
         member={member}
         open={suspendDialogOpen}
         onOpenChange={setSuspendDialogOpen}
-        onMemberUpdated={onMemberUpdated}
+        onMemberUpdated={handleDialogSuccess}
       />
 
       <DeleteMemberDialog 
         member={member}
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        onMemberUpdated={onMemberUpdated}
+        onMemberUpdated={handleDialogSuccess}
       />
     </>
   );

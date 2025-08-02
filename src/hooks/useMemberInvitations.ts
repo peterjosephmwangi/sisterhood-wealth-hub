@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useUserRoles } from './useUserRoles';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface MemberInvitation {
   id: string;
@@ -24,6 +25,7 @@ export const useMemberInvitations = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { isAdmin } = useUserRoles();
+  const { user } = useAuth();
 
   const fetchInvitations = async () => {
     if (!isAdmin()) {
@@ -43,7 +45,15 @@ export const useMemberInvitations = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setInvitations(data || []);
+      
+      // Type cast the data to match our interface
+      const typedData = (data || []).map(invitation => ({
+        ...invitation,
+        status: invitation.status as 'pending' | 'accepted' | 'expired',
+        member_data: invitation.member_data as { name: string; phone: string }
+      }));
+      
+      setInvitations(typedData);
     } catch (error) {
       console.error('Error fetching invitations:', error);
       toast({
@@ -66,6 +76,15 @@ export const useMemberInvitations = () => {
       return;
     }
 
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "User not authenticated",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setLoading(true);
       
@@ -76,6 +95,7 @@ export const useMemberInvitations = () => {
         .from('member_invitations')
         .insert({
           email: memberData.email,
+          invited_by: user.id,
           member_data: {
             name: memberData.name,
             phone: memberData.phone
