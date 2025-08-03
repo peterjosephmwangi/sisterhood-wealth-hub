@@ -19,27 +19,68 @@ const ResetPassword = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if we have the required tokens from the URL
-    const accessToken = searchParams.get('access_token');
-    const refreshToken = searchParams.get('refresh_token');
-    const type = searchParams.get('type');
+    const handlePasswordReset = async () => {
+      // Check if we have the required tokens from the URL
+      const accessToken = searchParams.get('access_token');
+      const refreshToken = searchParams.get('refresh_token');
+      const type = searchParams.get('type');
 
-    if (type === 'recovery' && accessToken && refreshToken) {
-      setIsValidToken(true);
-      // Set the session with the tokens from URL
-      supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      });
-    } else {
-      setIsValidToken(false);
-      toast({
-        title: "Invalid reset link",
-        description: "This password reset link is invalid or has expired.",
-        variant: "destructive",
-      });
-      setTimeout(() => navigate('/auth'), 3000);
-    }
+      console.log('Reset password params:', { accessToken: !!accessToken, refreshToken: !!refreshToken, type });
+
+      if (type === 'recovery' && accessToken && refreshToken) {
+        try {
+          // Set the session with the tokens from URL
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+
+          console.log('Session set result:', { user: !!data.user, error });
+
+          if (error) {
+            console.error('Error setting session:', error);
+            setIsValidToken(false);
+            toast({
+              title: "Invalid reset link",
+              description: "This password reset link is invalid or has expired.",
+              variant: "destructive",
+            });
+            setTimeout(() => navigate('/auth'), 3000);
+          } else if (data.user) {
+            setIsValidToken(true);
+            console.log('Valid session established for password reset');
+          } else {
+            setIsValidToken(false);
+            toast({
+              title: "Invalid reset link",
+              description: "Unable to authenticate with this reset link.",
+              variant: "destructive",
+            });
+            setTimeout(() => navigate('/auth'), 3000);
+          }
+        } catch (error) {
+          console.error('Exception during session setup:', error);
+          setIsValidToken(false);
+          toast({
+            title: "Error",
+            description: "An error occurred while processing the reset link.",
+            variant: "destructive",
+          });
+          setTimeout(() => navigate('/auth'), 3000);
+        }
+      } else {
+        console.log('Missing required parameters for password reset');
+        setIsValidToken(false);
+        toast({
+          title: "Invalid reset link",
+          description: "This password reset link is invalid or has expired.",
+          variant: "destructive",
+        });
+        setTimeout(() => navigate('/auth'), 3000);
+      }
+    };
+
+    handlePasswordReset();
   }, [searchParams, navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,22 +107,28 @@ const ResetPassword = () => {
     setIsLoading(true);
 
     try {
+      console.log('Attempting to update password');
       const { error } = await supabase.auth.updateUser({ password });
 
       if (error) {
+        console.error('Error updating password:', error);
         toast({
           title: "Error",
           description: error.message,
           variant: "destructive",
         });
       } else {
+        console.log('Password updated successfully');
         toast({
           title: "Success",
           description: "Your password has been updated successfully",
         });
-        navigate('/');
+        // Sign out and redirect to auth page so user can sign in with new password
+        await supabase.auth.signOut();
+        navigate('/auth');
       }
     } catch (error) {
+      console.error('Exception during password update:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred",
