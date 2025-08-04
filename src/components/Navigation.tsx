@@ -14,6 +14,7 @@ import {
   FileText,
   Bell,
   Settings,
+  Shield,
   LogOut 
 } from 'lucide-react';
 
@@ -35,6 +36,7 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab }) => {
     { id: 'financial', label: 'Financial', icon: Calculator, show: canManageFinances() },
     { id: 'notifications', label: 'Notifications', icon: Bell, show: true },
     { id: 'audit', label: 'Audit Trail', icon: FileText, show: canViewReports() },
+    { id: 'security', label: 'Security', icon: Shield, show: true },
     { id: 'admin', label: 'Administration', icon: Settings, show: isAdmin() },
   ];
 
