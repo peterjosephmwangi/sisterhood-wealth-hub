@@ -16,6 +16,8 @@ const Auth = () => {
   const [fullName, setFullName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [requires2FA, setRequires2FA] = useState(false);
+  const [totpCode, setTotpCode] = useState('');
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
 
@@ -29,9 +31,11 @@ const Auth = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    const { error } = await signIn(email, password);
+    const { error, requires2FA } = await signIn(email, password, totpCode);
     
-    if (!error) {
+    if (requires2FA) {
+      setRequires2FA(true);
+    } else if (!error) {
       navigate('/');
     }
     
@@ -94,6 +98,25 @@ const Auth = () => {
                     required
                   />
                 </div>
+                {requires2FA && (
+                  <div className="space-y-2">
+                    <Label htmlFor="totp-code">Two-Factor Authentication Code</Label>
+                    <Input
+                      id="totp-code"
+                      type="text"
+                      value={totpCode}
+                      onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                      placeholder="Enter 6-digit code or backup code"
+                      maxLength={8}
+                      className="font-mono text-center"
+                      autoFocus
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Enter the 6-digit code from your authenticator app or an 8-character backup code
+                    </p>
+                  </div>
+                )}
                 <Button
                   type="submit"
                   className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700"

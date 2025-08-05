@@ -65,8 +65,64 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error };
       }
 
-      // 2FA check disabled until migration is run
-      // TODO: Enable after running migration
+      // Check if user has 2FA enabled
+      const { data: userSettings } = await supabase
+        .from('user_2fa_settings')
+        .select('*')
+        .eq('user_id', data.user.id)
+        .eq('is_enabled', true)
+        .single();
+
+      if (userSettings && !totpCode) {
+        // 2FA is enabled but no code provided
+        return { error: null, requires2FA: true };
+      }
+
+      if (userSettings && totpCode) {
+        // Verify TOTP code
+        const { authenticator } = await import('otplib');
+        
+        if (!userSettings.totp_secret) {
+          toast({
+            title: "Error",
+            description: "2FA not properly configured",
+            variant: "destructive",
+          });
+          return { error: new Error("2FA not configured") };
+        }
+
+        const isValid = authenticator.verify({
+          token: totpCode,
+          secret: userSettings.totp_secret
+        });
+
+        if (!isValid) {
+          // Check backup codes
+          const { data: isBackupValid } = await supabase
+            .rpc('verify_backup_code', {
+              p_user_id: data.user.id,
+              p_code: totpCode.toUpperCase(),
+            });
+
+          if (!isBackupValid) {
+            toast({
+              title: "Error",
+              description: "Invalid 2FA code",
+              variant: "destructive",
+            });
+            return { error: new Error("Invalid 2FA code") };
+          }
+        }
+
+        // Log successful 2FA attempt
+        await supabase
+          .from('user_2fa_attempts')
+          .insert({
+            user_id: data.user.id,
+            attempt_type: totpCode.length === 6 ? 'totp' : 'backup',
+            success: true,
+          });
+      }
       
       return { error: null };
     } catch (error) {
