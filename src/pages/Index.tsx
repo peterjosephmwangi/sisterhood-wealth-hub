@@ -10,19 +10,18 @@ import Financial from '@/components/Financial';
 import NotificationSystem from '@/components/NotificationSystem';
 import AuditTrail from '@/components/audit/AuditTrail';
 import AdminDashboard from '@/components/admin/AdminDashboard';
-import SecuritySettings from '@/components/auth/SecuritySettings';
+import Settings from '@/components/Settings';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSessionManagement } from '@/hooks/useSessionManagement';
+import { useSessionTimeout } from '@/hooks/useSessionTimeout';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const { user } = useAuth();
 
-  // Enable session management with default settings
-  useSessionManagement({
-    inactivityTimeoutMinutes: 30,
-    warningTimeoutMinutes: 5,
-    enabled: true,
+  // Enable session timeout with default settings
+  useSessionTimeout({
+    timeoutMinutes: 30,
+    warningMinutes: 5,
   });
 
   const renderContent = () => {
@@ -45,8 +44,8 @@ const Index = () => {
         return <AuditTrail />;
       case 'admin':
         return <AdminDashboard />;
-      case 'security':
-        return <SecuritySettings />;
+      case 'settings':
+        return <Settings />;
       default:
         return <Dashboard />;
     }

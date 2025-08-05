@@ -20,17 +20,23 @@ const TwoFactorSetup: React.FC = () => {
   const [isDisabling, setIsDisabling] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   
-  const { settings, loading, generateSecret, enable2FA, disable2FA, regenerateBackupCodes } = use2FA();
+  const { settings, loading, generateSecret, generateQRCodeURL, verifyTOTP, enable2FA, disable2FA, regenerateBackupCodes } = use2FA();
   const { toast } = useToast();
 
-  const handleGenerateSecret = async () => {
+  const handleGenerateSecret = () => {
     setIsGenerating(true);
     try {
-      const data = await generateSecret();
-      setSecretKey(data.secret);
-      setQrCodeUrl(data.qr_code_url);
+      const secret = generateSecret();
+      setSecretKey(secret);
+      const userEmail = JSON.parse(localStorage.getItem('sb-' + 'gyffqhutawzplmcdbnvq' + '-auth-token') || '{}')?.user?.email || 'user@example.com';
+      const qrUrl = generateQRCodeURL(secret, userEmail);
+      setQrCodeUrl(qrUrl);
     } catch (error) {
-      // Error handled in hook
+      toast({
+        title: "Error",
+        description: "Failed to generate secret",
+        variant: "destructive",
+      });
     } finally {
       setIsGenerating(false);
     }
@@ -46,9 +52,19 @@ const TwoFactorSetup: React.FC = () => {
       return;
     }
 
+    // Verify the TOTP code first
+    if (!verifyTOTP(totpCode, secretKey)) {
+      toast({
+        title: "Error",
+        description: "Invalid verification code. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsEnabling(true);
     try {
-      await enable2FA(totpCode);
+      await enable2FA('totp', secretKey);
       setTotpCode('');
       setSecretKey('');
       setQrCodeUrl('');

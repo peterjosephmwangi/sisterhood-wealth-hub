@@ -1,37 +1,55 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { authenticator } from 'otplib';
 
-export interface TwoFASettings {
-  id: string;
+interface TwoFASettings {
+  id?: string;
+  user_id: string;
   is_enabled: boolean;
-  secret_key?: string;
-  backup_codes?: string[];
-  last_used_at?: string;
+  backup_codes: string[];
+  totp_secret: string | null;
+  phone_number: string | null;
+  sms_enabled: boolean;
+  totp_enabled: boolean;
 }
 
 export const use2FA = () => {
-  const [settings, setSettings] = useState<TwoFASettings | null>(null);
-  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
+  const [settings, setSettings] = useState<TwoFASettings | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const fetchSettings = async () => {
-    if (!user) {
-      setSettings(null);
-      setLoading(false);
-      return;
-    }
+  const fetch2FASettings = async () => {
+    if (!user?.id) return;
 
     try {
-      // For now, return null until migration is run
-      setSettings(null);
-    } catch (error) {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('user_2fa_settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      setSettings(data || {
+        user_id: user.id,
+        is_enabled: false,
+        backup_codes: [],
+        totp_secret: null,
+        phone_number: null,
+        sms_enabled: false,
+        totp_enabled: false,
+      });
+    } catch (error: any) {
       console.error('Error fetching 2FA settings:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch 2FA settings",
+        description: "Failed to load 2FA settings",
         variant: "destructive",
       });
     } finally {
@@ -39,120 +57,184 @@ export const use2FA = () => {
     }
   };
 
-  const generateSecret = async () => {
-    if (!user) throw new Error('User not authenticated');
+  const enable2FA = async (method: 'totp' | 'sms', data: any) => {
+    if (!user?.id) return false;
 
     try {
-      // Return mock data until migration is run
-      return {
-        secret: 'MOCK_SECRET_KEY',
-        qr_code_url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+      setLoading(true);
+      
+      // Generate backup codes
+      const { data: backupCodes, error: codesError } = await supabase
+        .rpc('generate_backup_codes');
+
+      if (codesError) throw codesError;
+
+      const updateData = {
+        user_id: user.id,
+        is_enabled: true,
+        backup_codes: backupCodes,
+        [method === 'totp' ? 'totp_enabled' : 'sms_enabled']: true,
+        [method === 'totp' ? 'totp_secret' : 'phone_number']: data,
       };
-    } catch (error) {
-      console.error('Error generating 2FA secret:', error);
-      toast({
-        title: "Error",
-        description: "Failed to generate 2FA secret",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
 
-  const enable2FA = async (totpCode: string) => {
-    if (!user) throw new Error('User not authenticated');
+      const { error } = await supabase
+        .from('user_2fa_settings')
+        .upsert(updateData);
 
-    try {
-      // Mock implementation until migration is run
-      await fetchSettings();
+      if (error) throw error;
+
+      await fetch2FASettings();
       
       toast({
-        title: "Info",
-        description: "2FA setup will be available after database migration",
+        title: "2FA Enabled",
+        description: `Two-factor authentication via ${method.toUpperCase()} has been enabled.`,
       });
 
-      return { backup_codes: [] };
-    } catch (error) {
+      return true;
+    } catch (error: any) {
       console.error('Error enabling 2FA:', error);
       toast({
         title: "Error",
-        description: "Failed to enable 2FA. Please check your code and try again.",
+        description: "Failed to enable 2FA",
         variant: "destructive",
       });
-      throw error;
+      return false;
+    } finally {
+      setLoading(false);
     }
   };
 
   const disable2FA = async () => {
-    if (!user) throw new Error('User not authenticated');
+    if (!user?.id) return false;
 
     try {
-      // Mock implementation until migration is run
-      await fetchSettings();
+      setLoading(true);
+      
+      const { error } = await supabase
+        .from('user_2fa_settings')
+        .update({
+          is_enabled: false,
+          totp_enabled: false,
+          sms_enabled: false,
+          totp_secret: null,
+          phone_number: null,
+          backup_codes: [],
+        })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      await fetch2FASettings();
       
       toast({
-        title: "Info",
-        description: "2FA management will be available after database migration",
+        title: "2FA Disabled",
+        description: "Two-factor authentication has been disabled.",
       });
-    } catch (error) {
+
+      return true;
+    } catch (error: any) {
       console.error('Error disabling 2FA:', error);
       toast({
         title: "Error",
         description: "Failed to disable 2FA",
         variant: "destructive",
       });
-      throw error;
+      return false;
+    } finally {
+      setLoading(false);
     }
   };
 
-  const verify2FA = async (totpCode: string) => {
-    if (!user) throw new Error('User not authenticated');
+  const verifyBackupCode = async (code: string) => {
+    if (!user?.id) return false;
 
     try {
-      // Mock implementation until migration is run
-      return true;
+      const { data, error } = await supabase
+        .rpc('verify_backup_code', {
+          p_user_id: user.id,
+          p_code: code.toUpperCase(),
+        });
+
+      if (error) throw error;
+
+      return data;
+    } catch (error: any) {
+      console.error('Error verifying backup code:', error);
+      return false;
+    }
+  };
+
+  const generateSecret = () => {
+    return authenticator.generateSecret();
+  };
+
+  const generateQRCodeURL = (secret: string, userEmail: string) => {
+    return authenticator.keyuri(userEmail, 'Sisterhood Wealth Hub', secret);
+  };
+
+  const verifyTOTP = (token: string, secret: string) => {
+    try {
+      return authenticator.verify({ token, secret });
     } catch (error) {
-      console.error('Error verifying 2FA:', error);
-      throw error;
+      return false;
     }
   };
 
   const regenerateBackupCodes = async () => {
-    if (!user) throw new Error('User not authenticated');
+    if (!user?.id || !settings?.is_enabled) return false;
 
     try {
-      // Mock implementation until migration is run
-      await fetchSettings();
+      setLoading(true);
+      
+      const { data: backupCodes, error: codesError } = await supabase
+        .rpc('generate_backup_codes');
+
+      if (codesError) throw codesError;
+
+      const { error } = await supabase
+        .from('user_2fa_settings')
+        .update({ backup_codes: backupCodes })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      await fetch2FASettings();
       
       toast({
-        title: "Info",
-        description: "Backup code regeneration will be available after database migration",
+        title: "Backup Codes Regenerated",
+        description: "New backup codes have been generated. Save them securely.",
       });
 
-      return [];
-    } catch (error) {
+      return true;
+    } catch (error: any) {
       console.error('Error regenerating backup codes:', error);
       toast({
         title: "Error",
         description: "Failed to regenerate backup codes",
         variant: "destructive",
       });
-      throw error;
+      return false;
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchSettings();
+    if (user) {
+      fetch2FASettings();
+    }
   }, [user]);
 
   return {
     settings,
     loading,
-    generateSecret,
     enable2FA,
     disable2FA,
-    verify2FA,
+    verifyBackupCode,
+    generateSecret,
+    generateQRCodeURL,
+    verifyTOTP,
     regenerateBackupCodes,
-    refetch: fetchSettings,
+    refetch: fetch2FASettings,
   };
 };

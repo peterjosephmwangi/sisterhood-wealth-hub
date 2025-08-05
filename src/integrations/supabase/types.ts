@@ -884,6 +884,75 @@ export type Database = {
         }
         Relationships: []
       }
+      user_2fa_attempts: {
+        Row: {
+          attempt_type: string
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          success: boolean
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          attempt_type: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          success?: boolean
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          attempt_type?: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          success?: boolean
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_2fa_settings: {
+        Row: {
+          backup_codes: string[] | null
+          created_at: string
+          id: string
+          is_enabled: boolean
+          phone_number: string | null
+          sms_enabled: boolean
+          totp_enabled: boolean
+          totp_secret: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          backup_codes?: string[] | null
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          phone_number?: string | null
+          sms_enabled?: boolean
+          totp_enabled?: boolean
+          totp_secret?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          backup_codes?: string[] | null
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          phone_number?: string | null
+          sms_enabled?: boolean
+          totp_enabled?: boolean
+          totp_secret?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -958,6 +1027,10 @@ export type Database = {
       expire_old_invitations: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      generate_backup_codes: {
+        Args: Record<PropertyKey, never>
+        Returns: string[]
       }
       generate_profit_loss_report: {
         Args: { start_date: string; end_date: string }
@@ -1235,6 +1308,10 @@ export type Database = {
       update_overdue_loan_status: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      verify_backup_code: {
+        Args: { p_user_id: string; p_code: string }
+        Returns: boolean
       }
     }
     Enums: {
