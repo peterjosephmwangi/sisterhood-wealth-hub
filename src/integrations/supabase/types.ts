@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -1012,16 +1012,16 @@ export type Database = {
       calculate_member_dividends: {
         Args: {
           declaration_id: string
-          period_start: string
           period_end: string
+          period_start: string
           total_dividend: number
         }
         Returns: {
-          member_id: string
-          member_name: string
-          member_contribution: number
           contribution_percentage: number
           dividend_amount: number
+          member_contribution: number
+          member_id: string
+          member_name: string
         }[]
       }
       expire_old_invitations: {
@@ -1033,14 +1033,14 @@ export type Database = {
         Returns: string[]
       }
       generate_profit_loss_report: {
-        Args: { start_date: string; end_date: string }
+        Args: { end_date: string; start_date: string }
         Returns: {
-          total_contributions: number
-          total_interest_income: number
-          total_income: number
-          total_expenses: number
           net_profit: number
           profit_margin: number
+          total_contributions: number
+          total_expenses: number
+          total_income: number
+          total_interest_income: number
         }[]
       }
       get_active_members_count: {
@@ -1050,13 +1050,13 @@ export type Database = {
       get_audit_trail: {
         Args: { p_limit?: number; p_offset?: number }
         Returns: {
-          id: string
           action: string
-          entity_type: string
-          entity_id: string
-          old_values: Json
-          new_values: Json
           created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          new_values: Json
+          old_values: Json
           user_name: string
         }[]
       }
@@ -1065,13 +1065,13 @@ export type Database = {
         Returns: number
       }
       get_budget_utilization: {
-        Args: { budget_period_start: string; budget_period_end: string }
+        Args: { budget_period_end: string; budget_period_start: string }
         Returns: {
+          allocated_amount: number
           category_id: string
           category_name: string
-          allocated_amount: number
-          spent_amount: number
           remaining_amount: number
+          spent_amount: number
           utilization_percentage: number
         }[]
       }
@@ -1080,12 +1080,12 @@ export type Database = {
         Returns: Database["public"]["Enums"]["app_role"][]
       }
       get_expenses_by_category: {
-        Args: { start_date?: string; end_date?: string }
+        Args: { end_date?: string; start_date?: string }
         Returns: {
           category_id: string
           category_name: string
-          total_amount: number
           expense_count: number
+          total_amount: number
         }[]
       }
       get_loan_balance: {
@@ -1099,54 +1099,54 @@ export type Database = {
       get_member_active_loans: {
         Args: { member_uuid: string }
         Returns: {
-          id: string
           amount: number
-          interest_rate: number
+          balance: number
           due_date: string
+          id: string
+          interest_rate: number
           loan_date: string
+          status: string
           total_amount: number
           total_repaid: number
-          balance: number
-          status: string
         }[]
       }
       get_member_communication_preferences: {
         Args: { member_uuid: string }
         Returns: {
-          sms_enabled: boolean
-          email_enabled: boolean
           contribution_reminders: boolean
-          meeting_reminders: boolean
-          loan_reminders: boolean
           dividend_notifications: boolean
+          email_enabled: boolean
           general_notifications: boolean
+          loan_reminders: boolean
+          meeting_reminders: boolean
+          sms_enabled: boolean
         }[]
       }
       get_member_dividend_history: {
         Args: { member_uuid: string }
         Returns: {
-          declaration_date: string
-          dividend_period_start: string
-          dividend_period_end: string
-          total_dividend_amount: number
-          member_contribution: number
           contribution_percentage: number
+          declaration_date: string
           dividend_amount: number
-          payment_status: string
+          dividend_period_end: string
+          dividend_period_start: string
+          member_contribution: number
           payment_date: string
+          payment_status: string
+          total_dividend_amount: number
         }[]
       }
       get_member_interest_profit: {
         Args: { member_uuid: string }
         Returns: {
+          due_date: string
+          interest_profit_earned: number
+          interest_rate: number
+          loan_date: string
           loan_id: string
           principal_amount: number
-          interest_rate: number
-          total_interest_expected: number
-          interest_profit_earned: number
-          loan_date: string
-          due_date: string
           status: string
+          total_interest_expected: number
         }[]
       }
       get_member_total_contributions: {
@@ -1160,13 +1160,13 @@ export type Database = {
       get_members_missing_monthly_contributions: {
         Args: Record<PropertyKey, never>
         Returns: {
+          days_since_last_contribution: number
+          last_contribution_amount: number
+          last_contribution_date: string
+          member_email: string
           member_id: string
           member_name: string
           member_phone: string
-          member_email: string
-          last_contribution_date: string
-          last_contribution_amount: number
-          days_since_last_contribution: number
           total_contributions: number
         }[]
       }
@@ -1181,74 +1181,74 @@ export type Database = {
       get_next_meeting: {
         Args: Record<PropertyKey, never>
         Returns: {
+          days_until: number
           id: string
-          title: string
+          location: string
           meeting_date: string
           meeting_time: string
-          location: string
-          days_until: number
+          title: string
         }[]
       }
       get_notification_stats: {
         Args: Record<PropertyKey, never>
         Returns: {
-          total_sent: number
-          total_delivered: number
-          total_failed: number
-          sms_sent: number
           email_sent: number
           recent_activity_count: number
+          sms_sent: number
+          total_delivered: number
+          total_failed: number
+          total_sent: number
         }[]
       }
       get_overdue_loans: {
         Args: Record<PropertyKey, never>
         Returns: {
+          amount_repaid: number
+          balance_due: number
+          days_overdue: number
+          due_date: string
+          interest_rate: number
+          loan_amount: number
           loan_id: string
           member_id: string
           member_name: string
           member_phone: string
-          loan_amount: number
           total_amount_due: number
-          amount_repaid: number
-          balance_due: number
-          due_date: string
-          days_overdue: number
-          interest_rate: number
         }[]
       }
       get_overdue_payments_summary: {
         Args: Record<PropertyKey, never>
         Returns: {
+          collection_percentage: number
+          current_month_collected: number
+          members_missing_contributions_count: number
           overdue_loans_count: number
           overdue_loans_total_amount: number
-          members_missing_contributions_count: number
           total_expected_monthly_target: number
-          current_month_collected: number
-          collection_percentage: number
         }[]
       }
       get_past_meetings: {
         Args: Record<PropertyKey, never>
         Returns: {
+          actual_attendees: number
+          created_at: string
           id: string
-          title: string
+          location: string
           meeting_date: string
           meeting_time: string
-          location: string
-          actual_attendees: number
           minutes: string
           status: Database["public"]["Enums"]["meeting_status"]
-          created_at: string
+          title: string
         }[]
       }
       get_recent_activities: {
         Args: Record<PropertyKey, never>
         Returns: {
-          member_name: string
           action: string
+          activity_type: string
           amount: number
           created_at: string
-          activity_type: string
+          member_name: string
         }[]
       }
       get_total_contributions: {
@@ -1256,7 +1256,7 @@ export type Database = {
         Returns: number
       }
       get_total_expenses: {
-        Args: { start_date?: string; end_date?: string }
+        Args: { end_date?: string; start_date?: string }
         Returns: number
       }
       get_total_interest_profit: {
@@ -1266,43 +1266,43 @@ export type Database = {
       get_upcoming_meetings: {
         Args: Record<PropertyKey, never>
         Returns: {
+          agenda: string[]
+          created_at: string
+          expected_attendees: number
           id: string
-          title: string
+          location: string
           meeting_date: string
           meeting_time: string
-          location: string
-          expected_attendees: number
-          agenda: string[]
           status: Database["public"]["Enums"]["meeting_status"]
-          created_at: string
+          title: string
         }[]
       }
       has_any_role: {
         Args: {
-          _user_id: string
           _roles: Database["public"]["Enums"]["app_role"][]
+          _user_id: string
         }
         Returns: boolean
       }
       has_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
         }
         Returns: boolean
       }
       log_activity: {
         Args: {
           p_action: string
-          p_entity_type: string
           p_entity_id?: string
-          p_old_values?: Json
+          p_entity_type: string
           p_new_values?: Json
+          p_old_values?: Json
         }
         Returns: string
       }
       set_monthly_target: {
-        Args: { target_month: string; target_amount: number }
+        Args: { target_amount: number; target_month: string }
         Returns: undefined
       }
       update_overdue_loan_status: {
@@ -1310,7 +1310,7 @@ export type Database = {
         Returns: undefined
       }
       verify_backup_code: {
-        Args: { p_user_id: string; p_code: string }
+        Args: { p_code: string; p_user_id: string }
         Returns: boolean
       }
     }
