@@ -15,6 +15,7 @@ import {
 import { useMemberInvitations } from '@/hooks/useMemberInvitations';
 import { format, isAfter } from 'date-fns';
 import RoleGuard from '@/components/common/RoleGuard';
+import UserPermissionsDebug from '@/components/common/UserPermissionsDebug';
 
 const MemberInvitations = () => {
   const { 
@@ -52,8 +53,10 @@ const MemberInvitations = () => {
   };
 
   return (
-    <RoleGuard requiredRole="admin">
-      <Card>
+    <>
+      <UserPermissionsDebug />
+      <RoleGuard requiredRole="admin">
+        <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Mail className="w-5 h-5" />
@@ -135,6 +138,7 @@ const MemberInvitations = () => {
         </CardContent>
       </Card>
     </RoleGuard>
+    </>
   );
 };
 
