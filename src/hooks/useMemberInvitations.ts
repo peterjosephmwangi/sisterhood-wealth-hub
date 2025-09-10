@@ -28,15 +28,6 @@ export const useMemberInvitations = () => {
   const { user } = useAuth();
 
   const fetchInvitations = async () => {
-    if (!isAdmin()) {
-      toast({
-        title: "Access Denied",
-        description: "You don't have permission to view invitations",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -67,15 +58,6 @@ export const useMemberInvitations = () => {
   };
 
   const sendInvitation = async (memberData: { name: string; phone: string; email: string }) => {
-    if (!isAdmin()) {
-      toast({
-        title: "Access Denied",
-        description: "You don't have permission to send invitations",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (!user) {
       toast({
         title: "Error",
@@ -153,15 +135,6 @@ export const useMemberInvitations = () => {
   };
 
   const resendInvitation = async (invitationId: string) => {
-    if (!isAdmin()) {
-      toast({
-        title: "Access Denied",
-        description: "You don't have permission to resend invitations",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       setLoading(true);
       
@@ -231,15 +204,6 @@ export const useMemberInvitations = () => {
   };
 
   const cancelInvitation = async (invitationId: string) => {
-    if (!isAdmin()) {
-      toast({
-        title: "Access Denied",
-        description: "You don't have permission to cancel invitations",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       setLoading(true);
       const { error } = await supabase
