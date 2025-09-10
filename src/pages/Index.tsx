@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
-import Navigation from '@/components/Navigation';
+import { AppSidebar } from '@/components/AppSidebar';
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import Dashboard from '@/components/Dashboard';
 import Members from '@/components/Members';
 import Contributions from '@/components/Contributions';
@@ -52,12 +53,21 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {renderContent()}
-      </main>
-    </div>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <AppSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+        <div className="flex-1 flex flex-col">
+          <header className="h-12 flex items-center border-b border-border bg-background px-4">
+            <SidebarTrigger />
+          </header>
+          <main className="flex-1 p-6 overflow-auto">
+            <div className="max-w-7xl mx-auto">
+              {renderContent()}
+            </div>
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 };
 
