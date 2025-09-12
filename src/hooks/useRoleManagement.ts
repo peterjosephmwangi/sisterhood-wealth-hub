@@ -17,15 +17,6 @@ export const useRoleManagement = () => {
   const { isAdmin } = useUserRoles();
 
   const fetchUsersWithRoles = async () => {
-    if (!isAdmin()) {
-      toast({
-        title: "Access Denied",
-        description: "You don't have permission to view user roles",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       setLoading(true);
       
@@ -71,15 +62,6 @@ export const useRoleManagement = () => {
   };
 
   const assignRole = async (userId: string, role: AppRole) => {
-    if (!isAdmin()) {
-      toast({
-        title: "Access Denied",
-        description: "You don't have permission to assign roles",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       const { error } = await supabase
         .from('user_roles')
@@ -104,15 +86,6 @@ export const useRoleManagement = () => {
   };
 
   const removeRole = async (userId: string, role: AppRole) => {
-    if (!isAdmin()) {
-      toast({
-        title: "Access Denied",
-        description: "You don't have permission to remove roles",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       const { error } = await supabase
         .from('user_roles')
