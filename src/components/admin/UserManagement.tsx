@@ -154,13 +154,33 @@ const UserManagement = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <User className="w-5 h-5" />
-          User Management
+          Users & Roles
         </CardTitle>
         <CardDescription>
-          Manage user accounts and profiles
+          Overview of all users and their assigned roles
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div className="bg-muted/50 rounded-lg p-4">
+            <div className="text-2xl font-bold text-primary">{users.length}</div>
+            <div className="text-sm text-muted-foreground">Registered Users</div>
+          </div>
+          <div className="bg-muted/50 rounded-lg p-4">
+            <div className="text-2xl font-bold text-primary">
+              {users.filter(u => u.member_name).length}
+            </div>
+            <div className="text-sm text-muted-foreground">Users with Member Links</div>
+          </div>
+          <div className="bg-muted/50 rounded-lg p-4">
+            <div className="text-2xl font-bold text-orange-500">
+              {users.filter(u => !u.member_name).length}
+            </div>
+            <div className="text-sm text-muted-foreground">Users without Member Links</div>
+          </div>
+        </div>
+
         <div className="flex items-center gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
