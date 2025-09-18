@@ -33,6 +33,8 @@ const AcceptInvitation = () => {
   const verifyInvitation = async () => {
     try {
       setVerifying(true);
+      console.log('Verifying invitation with token:', invitationToken);
+      
       const { data, error } = await supabase
         .from('member_invitations')
         .select('*')
@@ -41,9 +43,13 @@ const AcceptInvitation = () => {
         .gt('expires_at', new Date().toISOString())
         .single();
 
+      console.log('Invitation query result:', { data, error });
+
       if (error || !data) {
+        console.log('Invitation validation failed:', error);
         setInvitationValid(false);
       } else {
+        console.log('Invitation is valid:', data);
         setInvitationValid(true);
         setInvitationData(data);
       }
