@@ -29,7 +29,7 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log(`Sending invitation to ${email} for ${name}`);
 
-    const invitationUrl = `${Deno.env.get('SUPABASE_URL')?.replace('/rest/v1', '')}/auth/accept-invitation?token=${invitationToken}`;
+    const invitationUrl = `https://d2be3bfb-44e8-4233-a79f-d8a8355a7f7d.lovableproject.com/accept-invitation?token=${invitationToken}`;
 
     const emailResponse = await resend.emails.send({
       from: "Group Management System <onboarding@resend.dev>",
