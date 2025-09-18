@@ -36,22 +36,27 @@ const AcceptInvitation = () => {
       console.log('Verifying invitation with token:', invitationToken);
       
       const { data, error } = await supabase
-        .from('member_invitations')
-        .select('*')
-        .eq('invitation_token', invitationToken)
-        .eq('status', 'pending')
-        .gt('expires_at', new Date().toISOString())
-        .single();
+        .rpc('verify_invitation_token', { 
+          invitation_token_param: invitationToken 
+        });
 
-      console.log('Invitation query result:', { data, error });
+      console.log('Invitation verification result:', { data, error });
 
-      if (error || !data) {
+      if (error || !data || data.length === 0) {
         console.log('Invitation validation failed:', error);
         setInvitationValid(false);
       } else {
-        console.log('Invitation is valid:', data);
-        setInvitationValid(true);
-        setInvitationData(data);
+        const result = data[0];
+        console.log('Invitation verification response:', result);
+        
+        if (result.is_valid) {
+          console.log('Invitation is valid:', result.invitation_data);
+          setInvitationValid(true);
+          setInvitationData(result.invitation_data);
+        } else {
+          console.log('Invitation is not valid');
+          setInvitationValid(false);
+        }
       }
     } catch (error) {
       console.error('Error verifying invitation:', error);

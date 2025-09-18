@@ -1313,6 +1313,13 @@ export type Database = {
         Args: { p_code: string; p_user_id: string }
         Returns: boolean
       }
+      verify_invitation_token: {
+        Args: { invitation_token_param: string }
+        Returns: {
+          invitation_data: Json
+          is_valid: boolean
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "treasurer" | "secretary" | "member" | "chairperson"
