@@ -90,17 +90,44 @@ const AcceptInvitation = () => {
     try {
       setLoading(true);
       
-      const { data, error } = await supabase.rpc('accept_member_invitation', {
+      // Step 1: Accept the invitation and create member record
+      const { data: invitationResult, error: invitationError } = await supabase.rpc('accept_member_invitation', {
         invitation_token: invitationToken,
         user_password: password
       });
 
-      if (error) throw error;
+      if (invitationError) throw invitationError;
       
-      const result = data as any;
+      const result = invitationResult as any;
       
       if (!result.success) {
         throw new Error(result.error);
+      }
+
+      // Step 2: Create auth user using Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: result.email,
+        password: password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            full_name: result.full_name
+          }
+        }
+      });
+
+      if (authError) throw authError;
+
+      // Step 3: Complete the invitation process (create profile and assign role)
+      if (authData.user) {
+        const { error: completeError } = await supabase.rpc('complete_member_invitation', {
+          member_email: result.email
+        });
+
+        if (completeError) {
+          console.error('Error completing invitation:', completeError);
+          // Don't throw here as the user is created, just log the error
+        }
       }
 
       toast({

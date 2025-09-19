@@ -1024,6 +1024,10 @@ export type Database = {
           member_name: string
         }[]
       }
+      complete_member_invitation: {
+        Args: { member_email: string }
+        Returns: Json
+      }
       expire_old_invitations: {
         Args: Record<PropertyKey, never>
         Returns: undefined
