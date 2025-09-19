@@ -27,7 +27,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/accept-invitation" element={<AcceptInvitation />} />
             <Route
-              path="/*"
+              path="/"
               element={
                 <ProtectedRoute>
                   <Index />
