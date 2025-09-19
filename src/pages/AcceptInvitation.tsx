@@ -118,18 +118,6 @@ const AcceptInvitation = () => {
 
       if (authError) throw authError;
 
-      // Step 3: Complete the invitation process (create profile and assign role)
-      if (authData.user) {
-        const { error: completeError } = await supabase.rpc('complete_member_invitation', {
-          member_email: result.email
-        });
-
-        if (completeError) {
-          console.error('Error completing invitation:', completeError);
-          // Don't throw here as the user is created, just log the error
-        }
-      }
-
       toast({
         title: "Welcome!",
         description: "Your account has been created successfully. You can now sign in.",
