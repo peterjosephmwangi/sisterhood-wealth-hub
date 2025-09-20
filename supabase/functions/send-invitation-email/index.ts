@@ -29,7 +29,9 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log(`Sending invitation to ${email} for ${name}`);
 
-    const invitationUrl = `https://d2be3bfb-44e8-4233-a79f-d8a8355a7f7d.lovableproject.com/accept-invitation?token=${invitationToken}`;
+    // Use the current origin from the request or fallback to current preview URL
+    const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'https://id-preview--d2be3bfb-44e8-4233-a79f-d8a8355a7f7d.lovable.app';
+    const invitationUrl = `${origin}/accept-invitation?token=${invitationToken}`;
 
     const emailResponse = await resend.emails.send({
       from: "Group Management System <onboarding@resend.dev>",
