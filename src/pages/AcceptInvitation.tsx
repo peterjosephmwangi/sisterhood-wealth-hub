@@ -116,14 +116,37 @@ const AcceptInvitation = () => {
         }
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        // If user already exists, try to sign them in directly
+        if (authError.message?.includes('already registered') || authError.message?.includes('already been registered')) {
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: result.email,
+            password: password
+          });
+          
+          if (signInError) {
+            throw new Error(`Account exists but login failed: ${signInError.message}`);
+          }
+        } else {
+          throw authError;
+        }
+      }
 
-      toast({
-        title: "Welcome!",
-        description: "Your account has been created successfully. You can now sign in.",
-      });
-
-      navigate('/auth');
+      // Check if user was created but needs email confirmation
+      if (authData?.user && !authData.session) {
+        toast({
+          title: "Account Created!",
+          description: "Please check your email and click the confirmation link to complete setup, then return to sign in.",
+        });
+        navigate('/auth');
+      } else {
+        // User is logged in immediately (email confirmation disabled)
+        toast({
+          title: "Welcome!",
+          description: "Your account has been set up successfully. You are now logged in!",
+        });
+        navigate('/');
+      }
     } catch (error: any) {
       console.error('Error accepting invitation:', error);
       toast({
